@@ -5,4 +5,5 @@ This is the official documentation for the patient monitoring project between th
 ## Table of Contents
 
 1. [Introduction](intro/README.md)
-2. [Preprocessing](preprocessing/README.md)
+2. [Install](install/README.md)
+3. [Preprocessing](preprocessing/README.md)
