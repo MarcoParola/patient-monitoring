@@ -1,0 +1,26 @@
+defaults:
+  - _self_
+  
+task: 'classification'
+model : null
+seed: -1
+
+
+dataset:
+  path: "./data/"
+  resize: 224
+  fps: 5
+
+train:
+  save_path: "./models/"
+  batch_size: 32
+  lr: 1e-5
+  max_epochs: 100
+
+log:  
+  path: "./logs/"
+
+wandb:
+  wandb:
+  entity: marcoparla
+  project: patient-monitoring
