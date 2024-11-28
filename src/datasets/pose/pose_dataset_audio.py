@@ -73,8 +73,8 @@ if __name__ == "__main__":
     assert len(dataset_with_audio) > 0, "La lunghezza del dataset dovrebbe essere maggiore di 0."
     print(f"Test __len__ passato! Lunghezza del dataset: {len(dataset_with_audio)}")
 
-    # # Test di __getitem__
-    # video_tensor, audio_tensor = dataset_with_audio[15]
+    # Test di __getitem__
+    video_tensor, audio_tensor = dataset_with_audio[15]
     
     # # Salva l'audio come file WAV
     # torchaudio.save('audio_temp.wav', audio_tensor, sample_rate)  # 44100 è il sample rate
