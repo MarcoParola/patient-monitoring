@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class PosePrivacyCNN(nn.Module):
-    def __init__(self, input_shape=(3, 20, 256, 256), metadata_dim=3):
+    def __init__(self, input_shape=(3, 20, 256, 256), metadata_dim=3, num_classes=(5, 4, 3)):
         super(PosePrivacyCNN, self).__init__()
 
         # Video processing branch
@@ -15,7 +15,7 @@ class PosePrivacyCNN(nn.Module):
         # Adaptive pooling for video input
         self.adaptive_pool = nn.AdaptiveAvgPool3d((4, 4, 4))
 
-        # Flatten layer (correctly added as an attribute)
+        # Flatten layer
         self.flatten = nn.Flatten()
 
         # Dropout layers for video branch
@@ -34,14 +34,18 @@ class PosePrivacyCNN(nn.Module):
 
         # Combined feature processing
         combined_feature_size = self.flattened_size + 64  # Video features + Metadata features
-        
+
         # Fully connected layers
         self.fc1 = nn.Linear(combined_feature_size, 256)
-        self.fc2 = nn.Linear(256, 10)
-
-        # Activation and dropout
-        self.activation = nn.GELU()
         self.dropout_fc = nn.Dropout(p=0.4)
+
+        # Output layers for each metadata task
+        self.output_skin_color = nn.Linear(256, num_classes[0])  # Numero di classi per skin_color
+        self.output_gender = nn.Linear(256, num_classes[1])      # Numero di classi per gender
+        self.output_face = nn.Linear(256, num_classes[2])        # Numero di classi per face
+
+        # Activation
+        self.activation = nn.GELU()
 
     def _calculate_flatten_size(self, input_shape):
         # Create a dummy input to calculate the flattened size
@@ -89,11 +93,14 @@ class PosePrivacyCNN(nn.Module):
         # Fully connected layers
         x = self.activation(self.fc1(x_combined))
         x = self.dropout_fc(x)
-        x = self.fc2(x)
 
-        return x
+        # Output for each metadata task
+        output_skin_color = self.output_skin_color(x)
+        output_gender = self.output_gender(x)
+        output_face = self.output_face(x)
 
-# Example usage and testing
+        return output_skin_color, output_gender, output_face
+
 def test_model():
     # Video input shape: (batch_size, channels, depth, height, width)
     video_input_shape = (1, 3, 20, 256, 256)
@@ -102,18 +109,18 @@ def test_model():
     metadata_input_shape = (1, 3)  # skin_color, gender, face
     
     # Create model
-    model = PosePrivacyCNN(input_shape=video_input_shape[1:], metadata_dim=metadata_input_shape[1])
+    model = PosePrivacyCNN(input_shape=video_input_shape[1:], metadata_dim=metadata_input_shape[1], num_classes=(3, 2, 5))
     
     # Create sample inputs
     video_tensor = torch.randn(*video_input_shape)
     metadata_tensor = torch.randn(*metadata_input_shape)
     
     # Pass inputs through model
-    output = model(video_tensor, metadata_tensor)
+    output_skin_color, output_gender, output_face = model(video_tensor, metadata_tensor)
     
-    print("Video input shape:", video_tensor.shape)
-    print("Metadata input shape:", metadata_tensor.shape)
-    print("Output shape:", output.shape)
+    print("Output skin_color shape:", output_skin_color.shape)  # (batch_size, 3)
+    print("Output gender shape:", output_gender.shape)          # (batch_size, 2)
+    print("Output face shape:", output_face.shape)              # (batch_size, 5)
 
 # Run the test
 test_model()
