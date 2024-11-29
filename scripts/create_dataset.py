@@ -52,33 +52,35 @@ def organize_videos(base_path):
                     video_path = os.path.join(annotated_video_folder, camera_type_folder, video_filename)
                     
                     if os.path.exists(video_path):  # Se il video esiste in questa cartella
-                        # Determina le categorie in base agli eventi
-                        categories = set()
-                        if event['position']:
-                            categories.add('position')
-                        if event['verbal']:
-                            categories.add('verbal')
-                        if event['motion']:
-                            categories.add('motion')
-                        if event['environment']:
-                            categories.add('environment')
+                        # Determina le categorie e gli eventi associati
+                        event_data = {
+                            'position': event['position'],
+                            'verbal': event['verbal'],
+                            'motion': event['motion'],
+                            'environment': event['environment']
+                        }
 
                         # Copia il video nelle categorie corrispondenti
-                        for category in categories:
-                            category_folder = os.path.join(dataset_folder, category)
-                            new_video_filename = f"{video_id}.mp4"
-                            new_video_path = os.path.join(category_folder, new_video_filename)
+                        for category, details in event_data.items():
+                            if details:  # Solo se ci sono dati per la categoria
+                                category_folder = os.path.join(dataset_folder, category)
+                                new_video_filename = f"{video_id}.mp4"
+                                new_video_path = os.path.join(category_folder, new_video_filename)
 
-                            # Copia il video nella nuova cartella
-                            shutil.copy(video_path, new_video_path)
+                                # Copia il video nella nuova cartella
+                                shutil.copy(video_path, new_video_path)
 
-                            # Aggiungi informazioni nel CSV
-                            csv_files[category].append({
-                                'id_video': video_id,
-                                'id_paziente': patient_id,
-                                'evento': category,
-                                'camera_type': camera_type_value
-                            })
+                                # Aggiungi informazioni nel CSV con formato corretto
+                                # Usa json.dumps senza escape aggiuntivi
+                                evento_str = json.dumps(details)
+                                evento_str = evento_str.replace('\"', '"')  # Rimuove le virgolette extra
+
+                                csv_files[category].append({
+                                    'video_id': video_id,
+                                    'patient_id': patient_id,
+                                    'event': evento_str,  # Stringa JSON corretta
+                                    'camera_type': camera_type_value
+                                })
 
                         video_id += 1
 
