@@ -7,6 +7,6 @@ More information in the [official documentation](docs/README.md).
 # TODO
 
 - parametrize `./scripts/preprocessing.py`
-- write `./src/models/skeleton/*` (cate)
-- add `./scripts/dataset_stats.py` (Giulio)
 - write the documentation (all of us)
+- implement `load_datasets(...)` in `src.datasets.dataset_utils` and `load_models(...)` in `src.models.model_utils`
+
