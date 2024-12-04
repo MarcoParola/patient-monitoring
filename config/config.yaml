@@ -1,5 +1,11 @@
 defaults:
   - _self_
+  - privacy
+
+privacy:
+  age: True
+  gender: True
+  skin_color: True
   
 task: 'classification'
 model : null
