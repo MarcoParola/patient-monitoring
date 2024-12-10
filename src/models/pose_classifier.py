@@ -49,11 +49,11 @@ class PoseClassifier(pl.LightningModule):
         optimizer = Adam(self.parameters(), lr=0.0001)
         return optimizer
 
-    def training_epoch_end(self, outputs):
+    def on_train_epoch_end(self, outputs):
         avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
         self.log("avg_train_loss", avg_loss)
 
-    def validation_epoch_end(self, outputs):
+    def on_validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x["val_loss"] for x in outputs]).mean()
         self.log("avg_val_loss", avg_loss)
 

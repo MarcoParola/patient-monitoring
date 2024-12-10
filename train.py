@@ -8,7 +8,7 @@ from src.models.model_util import load_model
 from src.datasets.dataset_util import load_dataset
 
 
-@hydra.main(config_path="config", config_name="config")
+@hydra.main(config_path="config", config_name="config", version_base=None)
 def main(cfg):
 
     if cfg.seed == -1:

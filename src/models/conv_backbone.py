@@ -76,3 +76,17 @@ class CNN3DLightning(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
+    
+if __name__ == "__main__":
+    print("Test: CNN3DLightning")
+    
+    # Configurazione
+    input_channels = 3
+    model = CNN3DLightning(in_channels=input_channels)
+    
+    # Test forward
+    x = torch.randn(3, input_channels, 20, 256, 256)
+    features = model(x)
+    print(f"Features shape: {features.shape}")
+
+    print("\nTest completato con successo!")

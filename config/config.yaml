@@ -44,6 +44,10 @@ test:
 log:  
   path: "./logs/"
 
+
+hydra.run.dir: .
+hydra.output_subdir: ${hydra:runtime.cwd}/outputs/${now:%Y-%m-%d_%H-%M-%S}
+
 wandb:
   wandb:
   entity: marcoparla
