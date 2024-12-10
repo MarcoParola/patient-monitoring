@@ -76,20 +76,15 @@ class PoseDatasetByPatients(Dataset):
         return video_tensor, event
 
 class PoseDatasetByPatientsPrivacy(PoseDatasetByPatients):
-    def __init__(self, root, csv_path, patient_ids, root_privacy, transform=None, camera_type=None):
+    def __init__(self, root_privacy, **kwargs):
         """
         Dataset that extends PoseDatasetByPatients by adding handling of privacy-related JSON files.
 
         Args:
-            root (str): The root directory of the dataset.
-            csv_path (str): Path to the CSV file with dataset information.
-            patient_ids (list): List of patient IDs to include in this dataset.
             root_privacy (str): Directory containing privacy-related session.json files.
-            transform (callable, optional): A function to apply transformations to the videos.
-            camera_type (int, optional): Optional filter for camera type.
         """
         # Initialize the parent class
-        super().__init__(root, csv_path, patient_ids, transform, camera_type)
+        super().__init__(**kwargs)
 
         self.root_privacy = root_privacy
         self.patient_metadata = {}
@@ -103,8 +98,9 @@ class PoseDatasetByPatientsPrivacy(PoseDatasetByPatients):
                     session_data = json.load(f)
                     # Filter only relevant privacy attributes
                     filtered_metadata = {
+                        "age": session_data.get("age"),
                         "skin_color": session_data.get("skin_color"),
-                        "gender": session_data.get("gender")
+                        "gender": session_data.get("gender") 
                     }
                     self.patient_metadata[patient_id] = filtered_metadata
             else:
@@ -131,14 +127,14 @@ class PoseDatasetByPatientsPrivacy(PoseDatasetByPatients):
         # Retrieve privacy metadata for the given patient
         privacy_metadata = self.patient_metadata.get(patient_id, {})
 
-        return video_tensor, csv_metadata, privacy_metadata
+        return video_tensor, (csv_metadata, privacy_metadata)
 
 # Test the PoseDatasetByPatients class
 if __name__ == "__main__":
     # Parameters for the test
-    root = "position"
-    csv_path = "position.csv"
-    root_privacy = "privacy"
+    root = "dataset/position"
+    csv_path = "dataset/position.csv"
+    root_privacy = "data"
     patient_ids = [123, 234]
     transform = None
     camera_type = 0
@@ -180,7 +176,8 @@ if __name__ == "__main__":
 
     # Test del dataset
     print("\nTest del dataset:")
-    for i, (video, csv_metadata, privacy_metadata) in enumerate(dataloader):
+    for i, (video, metadata) in enumerate(dataloader):
+        csv_metadata, privacy_metadata = metadata
         print(f"\nSample {i + 1}:")
         print(f"- Video shape: {video.shape}")  # Forma del tensore video
         print(f"- CSV Metadata: {csv_metadata}")  # Metadati dal CSV
