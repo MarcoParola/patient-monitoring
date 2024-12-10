@@ -1,5 +1,6 @@
-
 privacy_attributes:
   age : 1
   gender: 1
   skin_color: 4
+
+path_privacy: "./data/"

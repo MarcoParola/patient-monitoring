@@ -2,9 +2,10 @@ import os
 import hydra
 import torch
 import pytorch_lightning as pl
+from torch.utils.data import DataLoader
 
-from src.models.model_utils import get_model
-from src.data.data_utils import get_data
+from src.models.model_util import load_model
+from src.datasets.dataset_util import load_dataset
 
 
 @hydra.main(config_path="config", config_name="config")
@@ -16,13 +17,23 @@ def main(cfg):
         cfg.train.seed = seed
     torch.manual_seed(cfg.train.seed)
 
-    print(cfg.pretty())
+    #print(cfg.pretty())
 
-    model = get_model(cfg)
-    train, val, test = get_data(cfg)
-    # TODO define dataloader or datamodule
+    model = load_model(cfg)
 
-    trainer = pl.Trainer() # TODO
+    train, val, test = load_dataset(cfg)
+    train_loader = DataLoader(train, batch_size=cfg.train.batch_size, shuffle=True, num_workers=cfg.train.num_workers)
+    val_loader = DataLoader(val, batch_size=cfg.train.batch_size, shuffle=False, num_workers=cfg.train.num_workers)
+    test_loader = DataLoader(test, batch_size=cfg.train.batch_size, shuffle=False, num_workers=cfg.train.num_workers)
+
+    # training (automates everything)
+    trainer = pl.Trainer(
+        accelerator=cfg.train.accelerator,
+        devices=cfg.train.devices,
+        max_epochs=cfg.train.max_epochs,
+    )
+    trainer.fit(model, train_loader, val_loader)
+    trainer.test(model, test_loader)
 
 if __name__ == "__main__":
     main()
