@@ -11,24 +11,27 @@ task: 'classification'
 model : null
 seed: -1
 
-input_shape : [1, 3, 20, 256, 256]
+in_channels: 3
+depth: 20
+width: 256
+height: 256
 output_dim : 9
 
 pose_dataset:
   path: ./dataset/position
   csv_path: ./dataset/position.csv
-  resize: 224
-  fps: 5
+  resize: 256
+  fps: 20
 
 train:
   save_path: "./models/"
-  batch_size: 32
+  batch_size: 4
   lr: 1e-5
   max_epochs: 100
   num_workers: 1
   patient_ids: [123, 234]
   camera_type: 0
-  accelerator: "cpu"
+  accelerator: "gpu"
   devices: 1
   seed: -1
 

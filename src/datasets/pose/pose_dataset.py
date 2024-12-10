@@ -73,6 +73,8 @@ class PoseDatasetByPatients(Dataset):
         if self.transform:
             video_tensor = self.transform(video_tensor)
 
+        print(f"Video shape after transform: {video_tensor.shape}")  # Debug
+
         return video_tensor, event
 
 class PoseDatasetByPatientsPrivacy(PoseDatasetByPatients):

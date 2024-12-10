@@ -1,4 +1,5 @@
 from torchvision import transforms
+import torch
 
 def load_dataset(cfg):
     """
@@ -71,26 +72,35 @@ def load_dataset(cfg):
 
     return train, val, test
 
-class DownsampleFrames:
+class SelectFrames:
     def __init__(self, fps):
         self.fps = fps
 
-    def __call__(self, video):
-        # Funzione per sottocampionare i frame in base al frame per secondo
-        step = max(1, len(video) // self.fps)
-        return video[::step]
+    def __call__(self, x):
+        num_frames = x.shape[1]
+        print("Num Frames", num_frames)
+        assert num_frames>=self.fps
+        return x[:, :self.fps, :, :]
 
-def get_transform(resize=None, fps=None):
-    transform_list = []
-
-    # Aggiungi ridimensionamento se specificato
-    if resize is not None:
-        transform_list.insert(0, transforms.Resize((resize, resize)))
-
-    # Aggiungi sottocampionamento se fps è specificato
-    if fps is not None:
-        transform_list.insert(0, DownsampleFrames(fps))
-
-    # Componi la trasformazione
-    composed_transform = transforms.Compose(transform_list)
-    return composed_transform, composed_transform, composed_transform
+def get_transform(resize, fps):
+    """
+    Restituisce le trasformazioni per i dataset di training, validation e test.
+    
+    Args:
+        resize: Tuple con le nuove dimensioni (altezza, larghezza).
+        fps: Numero di frame desiderato.
+    
+    Returns:
+        Tuple contenente train_transform, val_transform, test_transform.
+    """
+    # Trasformazioni comuni
+    common_transforms = transforms.Compose([
+        transforms.Resize(resize),
+        SelectFrames(fps)
+    ])
+    
+    train_transform = common_transforms
+    val_transform = common_transforms
+    test_transform = common_transforms
+    
+    return train_transform, val_transform, test_transform
