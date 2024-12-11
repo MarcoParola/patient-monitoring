@@ -9,46 +9,31 @@ from src.models.mlp import MLP
 class PoseClassifier(pl.LightningModule):
     def __init__(self, input_shape=(1, 3, 20, 256, 256), output_dim=9):
         super(PoseClassifier, self).__init__()
-        
+
         # Backbone convoluzionale
         self.conv_backbone = CNN3DLightning(in_channels=input_shape[1])
-        
+
         # MLP per classificazione finale
         self.mlp = MLP(input_dim=self.conv_backbone.feature_dim, output_dim=output_dim)
 
     def forward(self, video_input):
-        print(f"\n** Forward pass **")
-        print(f"Input shape: {video_input.shape}")
-        
-        # Caratteristiche video (output dal ConvBackbone)
+        # Passaggio forward
         x_video = self.conv_backbone(video_input)
-        print(f"Features from conv_backbone shape: {x_video.shape}")
-        
-        # Predizioni finali (unico tensore per tutte le classi)
         output = self.mlp(x_video)
-        print(f"Output shape: {output.shape}")
-        
         return output
-        
+
     def _common_step(self, batch, step_type):
         video_input, labels = batch
 
-        if isinstance(labels, tuple):
-            raise TypeError(f"Expected labels to be a tensor, but got a tuple: {type(labels)}")
-
-        print(f"\n** {step_type.capitalize()} Step **")
-        print(f"Video input shape: {video_input.shape}, Labels shape: {labels.shape}")
-        
         # Predizione
         pred = self(video_input)
-        print(f"Predictions shape: {pred.shape}")
-        
+
         # Calcolo della loss
         loss = F.cross_entropy(pred, labels)
-        print(f"Loss: {loss.item()}")
-        
-        # Logging delle metriche
-        self.log(f"{step_type}_loss", loss, prog_bar=True)
+
+        # Logging delle metriche con WandB tramite self.log
+        self.log(f"{step_type}_loss", loss, prog_bar=True, on_step=True, on_epoch=True)
+        self.log(f"{step_type}_accuracy", self.compute_accuracy(pred, labels), prog_bar=True, on_step=True, on_epoch=True)
 
         return {'loss': loss, 'logits': pred}
 
@@ -62,87 +47,53 @@ class PoseClassifier(pl.LightningModule):
         return self._common_step(batch, step_type="test")
 
     def configure_optimizers(self):
+        # Configurazione dell'ottimizzatore
         optimizer = Adam(self.parameters(), lr=0.0001)
-        print(f"\n** Optimizer configured: {optimizer}")
         return optimizer
 
-    def on_train_epoch_end(self, outputs=None):
-        print(f"\n** on_validation_epoch_end **")
-        if outputs:
-            avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
-            self.log("avg_train_loss", avg_loss)
+    def on_train_epoch_end(self):
+        print("\n** on_train_epoch_end **")
 
-    def on_validation_epoch_end(self, outputs=None):
-        print(f"\n** on_validation_epoch_end **")
-        if outputs:
-            avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
-            self.log("avg_val_loss", avg_loss)
+    def on_validation_epoch_end(self):
+        print("\n** on_validation_epoch_end **")
 
-    def test_epoch_end(self, outputs=None):
-        print(f"\n** test_epoch_end **")
-        if outputs:
-            avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
-            self.log("avg_test_loss", avg_loss)
+    def on_test_epoch_end(self):
+        print("\n** on_test_epoch_end **")
 
-    def on_train_start(self):
-        print(f"\n** on_train_start **")
-        self.log("train_start", torch.tensor(1.0))
-
-    def on_train_end(self):
-        print(f"\n** on_train_end **")
-        self.log("train_end", torch.tensor(1.0))
-
-    def on_epoch_start(self):
-        print(f"\n** on_epoch_start **")
-        self.log("epoch_start", self.current_epoch)
-
-    def on_epoch_end(self):
-        print(f"\n** on_epoch_end **")
-        self.log("epoch_end", self.current_epoch)
+    def compute_accuracy(self, preds, labels):
+        # Calcolo dell'accuratezza
+        _, predicted = torch.max(preds, 1)
+        correct = (predicted == labels).float().sum()
+        accuracy = correct / labels.size(0)
+        return accuracy
 
 if __name__ == "__main__":
     print("Test: PoseClassifier")
-    
+
     # Configurazione
     input_shape = (5, 3, 20, 256, 256)  # Batch size di 5
     num_classes = 9  # Numero di classi unificate
     model = PoseClassifier(input_shape=input_shape, output_dim=num_classes)
-    
+
     # Generazione di input casuali
     video_input = torch.randn(input_shape)  # Input video
     labels = torch.randint(0, num_classes, (input_shape[0],))  # Classi unificate
     batch = (video_input, labels)
 
     # Test del metodo forward
-    print("\n**Testing forward pass**")
     output = model(video_input)
     print(f"Output shape: {output.shape}")
 
     # Test del training_step
-    print("\n**Testing training_step**")
     train_loss = model.training_step(batch, batch_idx=0)
     print(f"Training loss: {train_loss['loss'].item()}")
 
     # Test del validation_step
-    print("\n**Testing validation_step**")
     val_loss = model.validation_step(batch, batch_idx=0)
     print(f"Validation loss: {val_loss['loss'].item()}")
 
     # Test del test_step
-    print("\n**Testing test_step**")
     test_loss = model.test_step(batch, batch_idx=0)
     print(f"Test loss: {test_loss['loss'].item()}")
-
-    # Test del configure_optimizers
-    print("\n**Testing configure_optimizers**")
-    optimizer = model.configure_optimizers()
-    print(f"Optimizer: {optimizer}")
-
-    # Test callback methods
-    print("\n**Testing callback methods**")
-    model.on_train_start()
-    model.on_epoch_start()
-    model.on_epoch_end()
-    model.on_train_end()
 
     print("\nTest completato con successo!")
