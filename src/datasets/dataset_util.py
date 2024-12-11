@@ -25,21 +25,24 @@ def load_dataset(cfg):
             csv_path=cfg.pose_dataset.csv_path,
             patient_ids=cfg.train.patient_ids,
             transform=train_transform,
-            camera_type=cfg.train.camera_type
+            camera_type=cfg.train.camera_type,
+            pose_map=cfg.pose_map
         )
         val = PoseDatasetByPatients(
             root=cfg.pose_dataset.path,
             csv_path=cfg.pose_dataset.csv_path,
             patient_ids=cfg.val.patient_ids,
             transform=val_transform,
-            camera_type=cfg.val.camera_type
+            camera_type=cfg.val.camera_type,
+            pose_map=cfg.pose_map
         )
         test = PoseDatasetByPatients(
             root=cfg.pose_dataset.path,
             csv_path=cfg.pose_dataset.csv_path,
             patient_ids=cfg.test.patient_ids,
             transform=test_transform,
-            camera_type=cfg.test.camera_type
+            camera_type=cfg.test.camera_type,
+            pose_map=cfg.pose_map
         )
 
     elif cfg.task == "privacy":
@@ -51,7 +54,8 @@ def load_dataset(cfg):
             csv_path=cfg.pose_dataset.csv_path,
             patient_ids=cfg.train.patient_ids,
             transform=train_transform,
-            camera_type=cfg.train.camera_type
+            camera_type=cfg.train.camera_type,
+            pose_map=cfg.pose_map
         )
         val = PoseDatasetByPatientsPrivacy(
             root=cfg.pose_dataset.path,
@@ -59,7 +63,8 @@ def load_dataset(cfg):
             csv_path=cfg.pose_dataset.csv_path,
             patient_ids=cfg.val.patient_ids,
             transform=val_transform,
-            camera_type=cfg.val.camera_type
+            camera_type=cfg.val.camera_type,
+            pose_map=cfg.pose_map
         )
         test = PoseDatasetByPatientsPrivacy(
             root=cfg.pose_dataset.path,
@@ -67,7 +72,8 @@ def load_dataset(cfg):
             csv_path=cfg.pose_dataset.csv_path,
             patient_ids=cfg.test.patient_ids,
             transform=test_transform,
-            camera_type=cfg.test.camera_type
+            camera_type=cfg.test.camera_type,
+            pose_map=cfg.pose_map
         )
 
     return train, val, test
@@ -78,7 +84,6 @@ class SelectFrames:
 
     def __call__(self, x):
         num_frames = x.shape[1]
-        print("Num Frames", num_frames)
         assert num_frames>=self.fps
         return x[:, :self.fps, :, :]
 
@@ -95,7 +100,7 @@ def get_transform(resize, fps):
     """
     # Trasformazioni comuni
     common_transforms = transforms.Compose([
-        transforms.Resize(resize),
+        transforms.Resize((resize, resize)),
         SelectFrames(fps)
     ])
     

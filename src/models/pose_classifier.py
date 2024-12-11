@@ -17,24 +17,40 @@ class PoseClassifier(pl.LightningModule):
         self.mlp = MLP(input_dim=self.conv_backbone.feature_dim, output_dim=output_dim)
 
     def forward(self, video_input):
+        print(f"\n** Forward pass **")
+        print(f"Input shape: {video_input.shape}")
+        
         # Caratteristiche video (output dal ConvBackbone)
         x_video = self.conv_backbone(video_input)
+        print(f"Features from conv_backbone shape: {x_video.shape}")
         
         # Predizioni finali (unico tensore per tutte le classi)
         output = self.mlp(x_video)
+        print(f"Output shape: {output.shape}")
+        
         return output
         
     def _common_step(self, batch, step_type):
         video_input, labels = batch
+
+        if isinstance(labels, tuple):
+            raise TypeError(f"Expected labels to be a tensor, but got a tuple: {type(labels)}")
+
+        print(f"\n** {step_type.capitalize()} Step **")
+        print(f"Video input shape: {video_input.shape}, Labels shape: {labels.shape}")
+        
+        # Predizione
         pred = self(video_input)
-
-        # Calcolo delle loss
+        print(f"Predictions shape: {pred.shape}")
+        
+        # Calcolo della loss
         loss = F.cross_entropy(pred, labels)
-
+        print(f"Loss: {loss.item()}")
+        
         # Logging delle metriche
         self.log(f"{step_type}_loss", loss, prog_bar=True)
 
-        return loss
+        return {'loss': loss, 'logits': pred}
 
     def training_step(self, batch, batch_idx):
         return self._common_step(batch, step_type="train")
@@ -47,30 +63,41 @@ class PoseClassifier(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = Adam(self.parameters(), lr=0.0001)
+        print(f"\n** Optimizer configured: {optimizer}")
         return optimizer
 
-    def on_train_epoch_end(self, outputs):
-        avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
-        self.log("avg_train_loss", avg_loss)
+    def on_train_epoch_end(self, outputs=None):
+        print(f"\n** on_validation_epoch_end **")
+        if outputs:
+            avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
+            self.log("avg_train_loss", avg_loss)
 
-    def on_validation_epoch_end(self, outputs):
-        avg_loss = torch.stack([x["val_loss"] for x in outputs]).mean()
-        self.log("avg_val_loss", avg_loss)
+    def on_validation_epoch_end(self, outputs=None):
+        print(f"\n** on_validation_epoch_end **")
+        if outputs:
+            avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
+            self.log("avg_val_loss", avg_loss)
 
-    def test_epoch_end(self, outputs):
-        avg_loss = torch.stack([x["test_loss"] for x in outputs]).mean()
-        self.log("avg_test_loss", avg_loss)
+    def test_epoch_end(self, outputs=None):
+        print(f"\n** test_epoch_end **")
+        if outputs:
+            avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
+            self.log("avg_test_loss", avg_loss)
 
     def on_train_start(self):
+        print(f"\n** on_train_start **")
         self.log("train_start", torch.tensor(1.0))
 
     def on_train_end(self):
+        print(f"\n** on_train_end **")
         self.log("train_end", torch.tensor(1.0))
 
     def on_epoch_start(self):
+        print(f"\n** on_epoch_start **")
         self.log("epoch_start", self.current_epoch)
 
     def on_epoch_end(self):
+        print(f"\n** on_epoch_end **")
         self.log("epoch_end", self.current_epoch)
 
 if __name__ == "__main__":
@@ -94,17 +121,17 @@ if __name__ == "__main__":
     # Test del training_step
     print("\n**Testing training_step**")
     train_loss = model.training_step(batch, batch_idx=0)
-    print(f"Training loss: {train_loss.item()}")
+    print(f"Training loss: {train_loss['loss'].item()}")
 
     # Test del validation_step
     print("\n**Testing validation_step**")
     val_loss = model.validation_step(batch, batch_idx=0)
-    print(f"Validation loss: {val_loss.item()}")
+    print(f"Validation loss: {val_loss['loss'].item()}")
 
     # Test del test_step
     print("\n**Testing test_step**")
     test_loss = model.test_step(batch, batch_idx=0)
-    print(f"Test loss: {test_loss.item()}")
+    print(f"Test loss: {test_loss['loss'].item()}")
 
     # Test del configure_optimizers
     print("\n**Testing configure_optimizers**")

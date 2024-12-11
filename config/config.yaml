@@ -1,6 +1,7 @@
 defaults:
   - _self_
   - privacy
+  - dataset
 
 privacy:
   age: True
@@ -15,7 +16,7 @@ in_channels: 3
 depth: 20
 width: 256
 height: 256
-output_dim : 9
+output_dim : 10
 
 pose_dataset:
   path: ./dataset/position
@@ -25,14 +26,14 @@ pose_dataset:
 
 train:
   save_path: "./models/"
-  batch_size: 4
+  batch_size: 32
   lr: 1e-5
   max_epochs: 100
   num_workers: 1
   patient_ids: [123, 234]
   camera_type: 0
   accelerator: "gpu"
-  devices: 1
+  devices: [0]
   seed: -1
 
 val:

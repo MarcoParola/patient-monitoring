@@ -7,7 +7,7 @@ import torchvision.io
 import json
 
 class PoseDatasetByPatients(Dataset):
-    def __init__(self, root, csv_path, patient_ids, transform=None, camera_type=None):
+    def __init__(self, root, csv_path, patient_ids, transform=None, camera_type=None, pose_map=None):
         """
         Initialize the dataset.
 
@@ -17,13 +17,14 @@ class PoseDatasetByPatients(Dataset):
             patient_ids: list of patient ids to include in this dataset.
             transform: a transform function to apply to the videos (default: None).
             camera_type: optional filter for camera type (default: None).
+            pose_map: mappatura delle etichette per la conversione in valori numerici (default: None).
         """
         self.root = root
         self.transform = transform
+        self.pose_map = pose_map  # Salva la mappatura nel dataset
 
         # Load the CSV and filter by patient_ids and camera_type
-        self.data = pd.read_csv(csv_path,quotechar='"')  # Handle quoted strings properly
-       
+        self.data = pd.read_csv(csv_path, quotechar='"')  # Handle quoted strings properly
         self.data = self.data[self.data['patient_id'].isin(patient_ids)]
         if camera_type is not None:
             self.data = self.data[self.data['camera_type'] == camera_type]
@@ -39,7 +40,7 @@ class PoseDatasetByPatients(Dataset):
 
     def __getitem__(self, index):
         """
-        Get the video tensor and event data for the given index.
+        Get the video tensor and label (body part) for the given index.
 
         Args:
             index: index of the data.
@@ -47,14 +48,14 @@ class PoseDatasetByPatients(Dataset):
         Returns:
             A tuple containing:
                 - video_tensor: the video data as a PyTorch tensor.
-                - event: parsed event information (list of dicts).
+                - label: the body part as an integer label.
         """
         # Retrieve row from the filtered DataFrame
         row = self.data.iloc[index]
 
         # Extract video path and event
         video_id = row['video_id']
-        event = row['event']  # Now event is a Python object (list of dicts)
+        event = row['event']
 
         # Construct the path to the video file
         video_path = os.path.join(self.root, f"{video_id}.mp4")
@@ -67,15 +68,22 @@ class PoseDatasetByPatients(Dataset):
         video, _, _ = torchvision.io.read_video(video_path, pts_unit="sec")
 
         # Permute dimensions to match PyTorch convention: C x T x H x W
-        video_tensor = video.permute(3, 0, 1, 2)  # From T x H x W x C to C x T x H x W
+        video_tensor = video.permute(3, 0, 1, 2).float() / 255.0  # From T x H x W x C to C x T x H x W
 
         # Apply transformation if specified
         if self.transform:
             video_tensor = self.transform(video_tensor)
 
-        print(f"Video shape after transform: {video_tensor.shape}")  # Debug
+        # Extract the label (body part) from the event
+        if len(event) == 1 and 'body_part' in event[0]:
+            label = event[0]['body_part']
+        else:
+            raise ValueError(f"Invalid event format: {event}")
 
-        return video_tensor, event
+        # Convert label to numeric using the pose_map
+        label = self.pose_map.get(label, -1)  # If label is not found, set it to -1
+
+        return video_tensor, label
 
 class PoseDatasetByPatientsPrivacy(PoseDatasetByPatients):
     def __init__(self, root_privacy, **kwargs):

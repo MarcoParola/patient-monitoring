@@ -1,0 +1,11 @@
+pose_map:
+  Arm_Left: 0
+  Arm_Right: 1
+  Leg_Left: 2
+  Leg_Right: 3
+  Hand_Left: 4
+  Hand_Right: 5
+  Foot_Left: 6
+  Foot_Right: 7
+  Head: 8
+  Trunk: 9
