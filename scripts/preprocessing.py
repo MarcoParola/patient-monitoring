@@ -36,8 +36,8 @@ def find_relevant_videos(timestamp, video_folder, video_duration):
                             + (segment_index - 1) * video_duration)
             segment_end = segment_start + video_duration
 
-            # Controlla se il timestamp cade in questo segmento o nei 5 secondi precedenti
-            if timestamp >= segment_start and timestamp <= segment_end + 5:
+            # Controlla se il timestamp cade in questo segmento o nei 3 secondi precedenti o successivi
+            if timestamp >= segment_start - 3 and timestamp <= segment_end + 3:
                 relevant_videos.append((video, segment_start, segment_end))
         except (ValueError, IndexError):
             print(f"File non conforme: {video}. Ignorato.")
@@ -89,8 +89,8 @@ for patient_id in patient_ids:
             continue
 
         # Calcola i tempi di estrazione
-        extract_start = timestamp - 5
-        extract_end = timestamp
+        extract_start = timestamp - 3
+        extract_end = timestamp + 3
         output_filename = f"{int(timestamp)}.mp4"
         output_path = os.path.join(output_nir if folder_name == "nir" else output_rgb, output_filename)
 
@@ -107,3 +107,5 @@ for patient_id in patient_ids:
                 print(f"Salvato clip estratto con audio in {output_path}")
             except ffmpeg.Error as e:
                 print(f"Errore durante l'estrazione di {video}: {e.stderr.decode()}")
+
+print("Estrazione Completata")

@@ -93,3 +93,4 @@ def organize_videos(base_path):
 # Percorso base
 base_path = 'data'
 organize_videos(base_path)
+print("Creazione Dataset Completata")
