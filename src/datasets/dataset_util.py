@@ -83,29 +83,42 @@ class SelectFrames:
         self.fps = fps
 
     def __call__(self, x):
+        """
+        Select frames uniformly distributed from the sequence.
+
+        Args:
+            x (torch.Tensor): Tensor of shape (C, T, H, W), where T is the number of frames.
+
+        Returns:
+            torch.Tensor: Tensor with the selected frames, of shape (C, self.fps, H, W).
+        """
         num_frames = x.shape[1]
-        assert num_frames>=self.fps
-        return x[:, :self.fps, :, :]
+        if num_frames < self.fps:
+            raise ValueError(f"The number of frames ({num_frames}) is less than the required frames ({self.fps}).")
+        
+        # Calculate uniformly distributed indices
+        indices = torch.linspace(0, num_frames - 1, steps=self.fps).long()
+        return x[:, indices, :, :]
 
 def get_transform(resize, fps):
     """
-    Restituisce le trasformazioni per i dataset di training, validation e test.
-    
+    Returns the transformations for the training, validation, and test datasets.
+
     Args:
-        resize: Tuple con le nuove dimensioni (altezza, larghezza).
-        fps: Numero di frame desiderato.
-    
+        resize: Tuple with the new dimensions (height, width).
+        fps: Number of desired frames.
+
     Returns:
-        Tuple contenente train_transform, val_transform, test_transform.
+        Tuple containing train_transform, val_transform, test_transform.
     """
-    # Trasformazioni comuni
+    # Common transformations
     common_transforms = transforms.Compose([
         transforms.Resize((resize, resize)),
         SelectFrames(fps)
     ])
-    
+
     train_transform = common_transforms
     val_transform = common_transforms
     test_transform = common_transforms
-    
+
     return train_transform, val_transform, test_transform
