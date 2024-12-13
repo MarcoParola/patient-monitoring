@@ -45,7 +45,6 @@ def main(cfg):
         project=cfg.wandb.project
     )
 
-
     hyper = OmegaConf.to_container(cfg, resolve=True)
     hyperparameters =  dict(flatdict.FlatDict(hyper, delimiter="/"))
 
@@ -63,6 +62,8 @@ def main(cfg):
     # Training e test
     trainer.fit(model, train_loader, val_loader)
     trainer.test(model, test_loader)
+
+    wandb.finish()
 
 if __name__ == "__main__":
     main()

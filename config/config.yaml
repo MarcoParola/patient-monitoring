@@ -26,9 +26,9 @@ pose_dataset:
 
 train:
   save_path: "./models/"
-  batch_size: 32
+  batch_size: 128
   lr: 1e-5
-  max_epochs: 100
+  max_epochs: 10
   num_workers: 1
   patient_ids: [123, 234]
   camera_type: 0
@@ -51,5 +51,5 @@ hydra.run.dir: .
 hydra.output_subdir: ${hydra:runtime.cwd}/outputs/${now:%Y-%m-%d_%H-%M-%S}
 
 wandb:
-  entity: "user"
+  entity: "baffobello14-universit-di-pisa"
   project: "patient-monitoring"
