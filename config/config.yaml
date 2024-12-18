@@ -2,11 +2,7 @@ defaults:
   - _self_
   - privacy
   - dataset
-
-privacy:
-  age: True
-  gender: True
-  skin_color: True
+  - wandb
   
 task: 'classification'
 model : null
@@ -16,7 +12,7 @@ in_channels: 3
 depth: 20
 width: 256
 height: 256
-output_dim : 10
+output_dim : 9
 
 pose_dataset:
   path: ./dataset/position
@@ -49,7 +45,3 @@ log:
 
 hydra.run.dir: .
 hydra.output_subdir: ${hydra:runtime.cwd}/outputs/${now:%Y-%m-%d_%H-%M-%S}
-
-wandb:
-  entity: "baffobello14-universit-di-pisa"
-  project: "patient-monitoring"

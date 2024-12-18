@@ -25,3 +25,4 @@ requirements.txt
 *.png
 
 /lightning_logs
+config/wandb.yaml

@@ -3,4 +3,9 @@ privacy_attributes:
   gender: 1
   skin_color: 4
 
+privacy:
+  age: True
+  gender: True
+  skin_color: True
+
 path_privacy: "./data/"
