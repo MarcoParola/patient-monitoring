@@ -55,7 +55,8 @@ def load_dataset(cfg):
             patient_ids=cfg.train.patient_ids,
             transform=train_transform,
             camera_type=cfg.train.camera_type,
-            pose_map=cfg.pose_map
+            pose_map=cfg.pose_map,
+            privacy_map=cfg.privacy_map
         )
         val = PoseDatasetByPatientsPrivacy(
             root=cfg.pose_dataset.path,
@@ -64,7 +65,8 @@ def load_dataset(cfg):
             patient_ids=cfg.val.patient_ids,
             transform=val_transform,
             camera_type=cfg.val.camera_type,
-            pose_map=cfg.pose_map
+            pose_map=cfg.pose_map,
+            privacy_map=cfg.privacy_map
         )
         test = PoseDatasetByPatientsPrivacy(
             root=cfg.pose_dataset.path,
@@ -73,7 +75,8 @@ def load_dataset(cfg):
             patient_ids=cfg.test.patient_ids,
             transform=test_transform,
             camera_type=cfg.test.camera_type,
-            pose_map=cfg.pose_map
+            pose_map=cfg.pose_map,
+            privacy_map=cfg.privacy_map
         )
 
     return train, val, test

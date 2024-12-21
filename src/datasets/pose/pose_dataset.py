@@ -86,60 +86,75 @@ class PoseDatasetByPatients(Dataset):
         return video_tensor, label
 
 class PoseDatasetByPatientsPrivacy(PoseDatasetByPatients):
-    def __init__(self, root_privacy, **kwargs):
+    def __init__(self, root_privacy, privacy_map, **kwargs):
         """
-        Dataset that extends PoseDatasetByPatients by adding handling of privacy-related JSON files.
+        Dataset che estende PoseDatasetByPatients aggiungendo la gestione dei file JSON relativi alla privacy.
 
         Args:
-            root_privacy (str): Directory containing privacy-related session.json files.
+            root_privacy (str): Directory contenente i file session.json con i metadati sulla privacy.
+            privacy_map (dict): Mappatura per trasformare valori di genere e colore della pelle in numeri.
         """
-        # Initialize the parent class
+        # Inizializza la classe madre
         super().__init__(**kwargs)
 
         self.root_privacy = root_privacy
+        self.privacy_map = privacy_map
         self.patient_metadata = {}
 
-        # Load privacy metadata from session.json files
-        for patient_id in patient_ids:
+        # Carica i metadati relativi alla privacy dai file session.json
+        for patient_id in self.data['patient_id'].unique():
             privacy_folder = os.path.join(root_privacy, str(patient_id))
             session_file = os.path.join(privacy_folder, "session.json")
             if os.path.exists(session_file):
                 with open(session_file, "r") as f:
                     session_data = json.load(f)
-                    # Filter only relevant privacy attributes
-                    filtered_metadata = {
+                    # Filtra e salva i metadati sulla privacy
+                    self.patient_metadata[patient_id] = {
                         "age": session_data.get("age"),
                         "skin_color": session_data.get("skin_color"),
-                        "gender": session_data.get("gender") 
+                        "gender": session_data.get("gender")
                     }
-                    self.patient_metadata[patient_id] = filtered_metadata
             else:
-                print(f"Warning: The session.json file for patient {patient_id} does not exist.")
+                print(f"Warning: Il file session.json per il paziente {patient_id} non esiste.")
 
     def __getitem__(self, index):
         """
-        Get the video, CSV metadata, and privacy metadata associated with the patient.
+        Ottieni il video, l'evento dal CSV e i metadati sulla privacy associati al paziente.
 
         Args:
-            index (int): Index of the sample.
+            index (int): Indice del campione.
 
         Returns:
-            video (Tensor): Video data as a PyTorch tensor.
-            csv_metadata (dict): Metadata from the CSV file.
-            privacy_metadata (dict): Privacy-related metadata for the patient.
+            video_tensor (Tensor): Dati video come tensore PyTorch.
+            event (dict): Evento associato al video.
+            privacy_metadata (dict): Metadati relativi alla privacy.
         """
-        # Get video and CSV metadata using the base class method
-        video_tensor, csv_metadata = super().__getitem__(index)
+        # Ottieni video_tensor e label (l'evento) dalla classe madre
+        video_tensor, event = super().__getitem__(index)
 
-        # Extract the patient ID from the CSV metadata
+        # Ottieni il patient_id dal DataFrame
         patient_id = self.data.iloc[index]['patient_id']
 
-        # Retrieve privacy metadata for the given patient
+        # Recupera i metadati sulla privacy per il paziente
         privacy_metadata = self.patient_metadata.get(patient_id, {})
 
-        return video_tensor, (csv_metadata, privacy_metadata)
+        # Converti gender e skin_color in numeri usando privacy_map
+        if "gender" in privacy_metadata:
+            privacy_metadata["gender"] = torch.tensor([self.privacy_map.get(privacy_metadata["gender"], -1)], dtype=torch.int64)
+        if "skin_color" in privacy_metadata:
+            privacy_metadata["skin_color"] = torch.tensor([self.privacy_map.get(privacy_metadata["skin_color"], -1)], dtype=torch.int64)
 
-# Test the PoseDatasetByPatients class
+        # Converte age in un tensor, se presente
+        if "age" in privacy_metadata and privacy_metadata["age"] is not None:
+            try:
+                privacy_metadata["age"] = torch.tensor([int(privacy_metadata["age"])], dtype=torch.int64)
+            except ValueError:
+                privacy_metadata["age"] = torch.tensor([-1], dtype=torch.int64)  # Valore predefinito in caso di errore
+        else:
+            privacy_metadata["age"] = torch.tensor([-1], dtype=torch.int64)  # Default se non presente
+
+        return video_tensor, (event, privacy_metadata)
+
 if __name__ == "__main__":
     # Parameters for the test
     root = "dataset/position"
@@ -148,47 +163,57 @@ if __name__ == "__main__":
     patient_ids = [123, 234]
     transform = None
     camera_type = 0
+    pose_map = {
+        "Arm_Left": 0,
+        "Arm_Right": 1,
+        "Leg_Left": 2,
+        "Leg_Right": 3,
+        "Hand_Left": 4,
+        "Hand_Right": 5,
+        "Foot_Left": 6,
+        "Foot_Right": 7,
+        "Head": 8
+    }
+    privacy_map = {
+        "white": 0, "brown": 1, "yellow": 2, "black": 3,
+        "male": 0, "female": 1
+    }
 
-    # Verifica dei percorsi
-    if not os.path.exists(csv_path):
-        raise FileNotFoundError(f"Il file CSV non esiste: {csv_path}")
-    if not os.path.exists(root):
-        raise FileNotFoundError(f"La cartella dei video non esiste: {root}")
-    for patient_id in patient_ids:
-        session_file = os.path.join(root_privacy, str(patient_id), "session.json")
-        if not os.path.exists(session_file):
-            print(f"Avviso: Il file session.json non esiste per il paziente {patient_id}: {session_file}")
-
-    # Create the dataset
-    dataset = PoseDatasetByPatients(root=root, csv_path=csv_path, patient_ids=patient_ids, camera_type=camera_type)
-
-    # Test dataset length
-    assert len(dataset) > 0, "Dataset length should be greater than 0."
-    print(f"Test __len__ passed! Dataset length: {len(dataset)}")
-
-    # Test __getitem__
-    video_tensor, event = dataset[0]
-    assert video_tensor is not None, "Video tensor should not be None."
-    assert event is not None, "Event data should not be None."
-    print(f"Test __getitem__ passed! Video Shape: {video_tensor.shape}, Event: {event}")
-
-    # Inizializzazione del dataset esteso
-    dataset = PoseDatasetByPatientsPrivacy(
+    # Test della classe PoseDatasetByPatients
+    print("Testing PoseDatasetByPatients...")
+    dataset_by_patients = PoseDatasetByPatients(
         root=root,
         csv_path=csv_path,
         patient_ids=patient_ids,
-        root_privacy=root_privacy,
+        transform=transform,
         camera_type=camera_type,
+        pose_map=pose_map
     )
 
-    # Creazione del DataLoader
-    dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
+    dataloader_by_patients = DataLoader(dataset_by_patients, batch_size=2, shuffle=True)
 
-    # Test del dataset
-    print("\nTest del dataset:")
-    for i, (video, metadata) in enumerate(dataloader):
-        csv_metadata, privacy_metadata = metadata
-        print(f"\nSample {i + 1}:")
-        print(f"- Video shape: {video.shape}")  # Forma del tensore video
-        print(f"- CSV Metadata: {csv_metadata}")  # Metadati dal CSV
-        print(f"- Privacy Metadata: {privacy_metadata}")  # Metadati sulla privacy
+    for video_tensor, label in dataloader_by_patients:
+        print(f"Video tensor shape: {video_tensor.shape}")
+        print(f"Label: {label}")
+        break  # Esegui solo un batch per test
+
+    # Test della classe PoseDatasetByPatientsPrivacy
+    print("\nTesting PoseDatasetByPatientsPrivacy...")
+    dataset_by_patients_privacy = PoseDatasetByPatientsPrivacy(
+        root_privacy=root_privacy,
+        privacy_map=privacy_map,
+        root=root,
+        csv_path=csv_path,
+        patient_ids=patient_ids,
+        transform=transform,
+        camera_type=camera_type,
+        pose_map=pose_map
+    )
+
+    dataloader_by_patients_privacy = DataLoader(dataset_by_patients_privacy, batch_size=2, shuffle=True)
+
+    for video_tensor, (event, privacy_metadata) in dataloader_by_patients_privacy:
+        print(f"Video tensor shape: {video_tensor.shape}")
+        print(f"Event: {event}")
+        print(f"Privacy metadata: {privacy_metadata}")
+        break  # Esegui solo un batch per test
