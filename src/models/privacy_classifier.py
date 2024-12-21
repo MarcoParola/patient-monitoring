@@ -3,8 +3,8 @@ import torch.nn as nn
 import pytorch_lightning as pl
 import torch.nn.functional as F
 from torch.optim import Adam
-from conv_backbone import CNN3DLightning
-from mlp import MLP
+from src.models.conv_backbone import CNN3DLightning
+from src.models.mlp import MLP
 
 # PrivacyClassifier che unisce il backbone convoluzionale con MLP per ciascun task
 class PrivacyClassifier(pl.LightningModule):
@@ -29,7 +29,7 @@ class PrivacyClassifier(pl.LightningModule):
         output_age = self.mlp_age(x_video)
 
         return output_skin_color, output_gender, output_age
-        
+
     def _common_step(self, batch, step_type):
         video_input, labels = batch
         pred_skin_color, pred_gender, pred_age = self(video_input)
@@ -42,11 +42,18 @@ class PrivacyClassifier(pl.LightningModule):
         # Somma delle loss
         total_loss = loss_skin_color + loss_gender + loss_age
 
+        # Calcolo dell'accuracy
+        acc_skin_color = self.compute_accuracy_multi_class(pred_skin_color, labels['skin_color'])
+        acc_gender = self.compute_accuracy_binary(pred_gender, labels['gender'])
+
         # Logging delle metriche
-        self.log(f"{step_type}_loss_skin_color", loss_skin_color, prog_bar=True)
-        self.log(f"{step_type}_loss_gender", loss_gender, prog_bar=True)
-        self.log(f"{step_type}_loss_age", loss_age, prog_bar=True)
-        self.log(f"{step_type}_loss", total_loss, prog_bar=True)
+        self.log(f"{step_type}_loss_skin_color", loss_skin_color, prog_bar=True, on_step=True, on_epoch=True)
+        self.log(f"{step_type}_loss_gender", loss_gender, prog_bar=True, on_step=True, on_epoch=True)
+        self.log(f"{step_type}_loss_age", loss_age, prog_bar=True, on_step=True, on_epoch=True)
+        self.log(f"{step_type}_loss", total_loss, prog_bar=True, on_step=True, on_epoch=True)
+
+        self.log(f"{step_type}_acc_skin_color", acc_skin_color, prog_bar=True, on_step=True, on_epoch=True)
+        self.log(f"{step_type}_acc_gender", acc_gender, prog_bar=True, on_step=True, on_epoch=True)
 
         return total_loss
 
@@ -63,35 +70,30 @@ class PrivacyClassifier(pl.LightningModule):
         optimizer = Adam(self.parameters(), lr=0.0001)
         return optimizer
 
-    def on_train_epoch_end(self, outputs):
-        avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
-        self.log("avg_train_loss", avg_loss)
+    def on_train_epoch_end(self):
+        print("\n** on_train_epoch_end **")
 
-    def on_validation_epoch_end(self, outputs):
-        avg_loss = torch.stack([x["val_loss"] for x in outputs]).mean()
-        self.log("avg_val_loss", avg_loss)
+    def on_validation_epoch_end(self):
+        print("\n** on_validation_epoch_end **")
 
-    def test_epoch_end(self, outputs):
-        avg_loss = torch.stack([x["test_loss"] for x in outputs]).mean()
-        self.log("avg_test_loss", avg_loss)
+    def on_test_epoch_end(self):
+        print("\n** on_test_epoch_end **")
 
-    def on_train_start(self):
-        self.log("train_start", torch.tensor(1.0))
+    def compute_accuracy_multi_class(self, preds, labels):
+        _, predicted = torch.max(preds, 1)
+        correct = (predicted == labels).float().sum()
+        return correct / labels.size(0)
 
-    def on_train_end(self):
-        self.log("train_end", torch.tensor(1.0))
-
-    def on_epoch_start(self):
-        self.log("epoch_start", self.current_epoch)
-
-    def on_epoch_end(self):
-        self.log("epoch_end", self.current_epoch)
+    def compute_accuracy_binary(self, preds, labels):
+        predicted = (torch.sigmoid(preds) > 0.5).float()
+        correct = (predicted == labels).float().sum()
+        return correct / labels.size(0)
 
 if __name__ == "__main__":
     print("Test: PrivacyClassifier")
     
     # Configurazione
-    input_shape = (5, 3, 20, 256, 256)  # Batch size di 8
+    input_shape = (5, 3, 20, 256, 256)  # Batch size di 5
     num_classes = (4, 1, 1)  # Numero di classi per skin color, gender e age
     model = PrivacyClassifier(input_shape=input_shape, output_dim=num_classes)
     
@@ -103,39 +105,23 @@ if __name__ == "__main__":
         'age': torch.randn(input_shape[0])                                        # Valori continui per age
     }
     batch = (video_input, labels)
-
+    
     # Test del metodo forward
-    print("\n**Testing forward pass**")
     output_skin_color, output_gender, output_age = model(video_input)
-    print(f"Skin color output shape: {output_skin_color.shape}")
-    print(f"Gender output shape: {output_gender.shape}")
-    print(f"Age output shape: {output_age.shape}")
+    print(f"Output Skin Color shape: {output_skin_color.shape}")
+    print(f"Output Gender shape: {output_gender.shape}")
+    print(f"Output Age shape: {output_age.shape}")
 
     # Test del training_step
-    print("\n**Testing training_step**")
     train_loss = model.training_step(batch, batch_idx=0)
     print(f"Training loss: {train_loss.item()}")
 
     # Test del validation_step
-    print("\n**Testing validation_step**")
     val_loss = model.validation_step(batch, batch_idx=0)
     print(f"Validation loss: {val_loss.item()}")
 
     # Test del test_step
-    print("\n**Testing test_step**")
     test_loss = model.test_step(batch, batch_idx=0)
     print(f"Test loss: {test_loss.item()}")
-
-    # Test del configure_optimizers
-    print("\n**Testing configure_optimizers**")
-    optimizer = model.configure_optimizers()
-    print(f"Optimizer: {optimizer}")
-
-    # Test callback methods
-    print("\n**Testing callback methods**")
-    model.on_train_start()
-    model.on_epoch_start()
-    model.on_epoch_end()
-    model.on_train_end()
 
     print("\nTest completato con successo!")
