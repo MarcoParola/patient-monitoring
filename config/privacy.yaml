@@ -1,11 +1,14 @@
 privacy_attributes:
-  age : 1
-  gender: 1
   skin_color: 4
+  gender: 1
+  age: 1
 
-privacy:
-  age: True
-  gender: True
-  skin_color: True
+privacy_map:
+  white: 0
+  brown: 1
+  yellow: 2
+  black: 3
+  male: 0
+  female: 1
 
 path_privacy: "./data/"
