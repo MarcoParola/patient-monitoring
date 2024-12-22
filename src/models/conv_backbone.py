@@ -43,6 +43,7 @@ class CNN3DLightning(pl.LightningModule):
         x = self.pool4(x)
         x = F.relu(self.conv4(x))
         x = self.dropout(x)
+        print(x.size())
         x = self.flatten(x)
         x = self.feature_extractor(x)
         return x

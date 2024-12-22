@@ -4,21 +4,42 @@ import pytorch_lightning as pl
 import torch.nn.functional as F
 from torch.optim import Adam
 from src.models.conv_backbone import CNN3DLightning
+from src.models.skeleton.yolo_skeleton import YOLOPoseAPI
+from src.models.skeleton.openpose_skeleton import OpenPoseAPI
 from src.models.mlp import MLP
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
 
 class PoseClassifier(pl.LightningModule):
-    def __init__(self, input_shape=(1, 3, 20, 256, 256), output_dim=9):
+    def __init__(self, input_shape=(1, 3, 20, 640, 480), output_dim=9, conv_backbone="CNN3D", freeze=True):
         super(PoseClassifier, self).__init__()
-
-        # Backbone convoluzionale
-        self.conv_backbone = CNN3DLightning(in_channels=input_shape[1])
+ 
+        if (conv_backbone == "YOLOn"):
+            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11n-pose.pt").requires_grad_(freeze)
+        elif (conv_backbone == "YOLOx"):
+            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11x-pose.pt")
+        elif (conv_backbone == "YOLOl"):
+            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11l-pose.pt")
+        elif (conv_backbone == "YOLOm"):
+            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11m-pose.pt")
+        elif (conv_backbone == "YOLOs"):
+            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11s-pose.pt")
+        else:
+            self.conv_backbone = CNN3DLightning(in_channels=input_shape[1])
+        
+        for param in self.conv_backbone.parameters():
+            param.requires_grad = False
 
         # MLP per classificazione finale
         self.mlp = MLP(input_dim=self.conv_backbone.feature_dim, output_dim=output_dim)
+        self.test_outputs = [] 
+        self.output_dim = output_dim
 
     def forward(self, video_input):
         # Passaggio forward
         x_video = self.conv_backbone(video_input)
+        print(x_video.size())
         output = self.mlp(x_video)
         return output
 
@@ -36,7 +57,9 @@ class PoseClassifier(pl.LightningModule):
         self.log(f"{step_type}_accuracy", self.compute_accuracy(pred, labels), prog_bar=True, on_step=True, on_epoch=True)
 
         return {'loss': loss, 'logits': pred}
-
+    
+    
+    
     def training_step(self, batch, batch_idx):
         return self._common_step(batch, step_type="train")
 
@@ -44,7 +67,12 @@ class PoseClassifier(pl.LightningModule):
         return self._common_step(batch, step_type="val")
 
     def test_step(self, batch, batch_idx):
-        return self._common_step(batch, step_type="test")
+        results = self._common_step(batch, step_type="test")
+        self.test_outputs.append({
+            "logits": results["logits"],
+            "labels": batch[1]
+        })  # Aggiungi logits e label alla lista
+        return results
 
     def configure_optimizers(self):
         # Configurazione dell'ottimizzatore
@@ -58,7 +86,28 @@ class PoseClassifier(pl.LightningModule):
         print("\n** on_validation_epoch_end **")
 
     def on_test_epoch_end(self):
-        print("\n** on_test_epoch_end **")
+        if not self.test_outputs:
+            print("No test outputs collected.")
+            return
+
+        # Raccolta di tutte le predizioni e label
+        all_preds = torch.cat([torch.argmax(out["logits"], dim=1) for out in self.test_outputs], dim=0)
+        all_labels = torch.cat([out["labels"] for out in self.test_outputs], dim=0)
+
+        # Calcolo della matrice di confusione
+        conf_matrix = confusion_matrix(all_labels.cpu().numpy(), all_preds.cpu().numpy(), labels=list(range(self.output_dim)))
+
+        # Visualizzazione e logging della matrice di confusione
+        plt.figure(figsize=(10, 7))
+        sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=list(range(self.output_dim)), yticklabels=list(range(self.output_dim)))
+        plt.xlabel("Predicted")
+        plt.ylabel("Actual")
+        plt.title("Confusion Matrix")
+        self.logger.experiment.log({"Confusion Matrix": plt.gcf()})
+        plt.close()
+
+        # Svuota la lista degli output per il prossimo test
+        self.test_outputs.clear()
 
     def compute_accuracy(self, preds, labels):
         # Calcolo dell'accuratezza
@@ -97,3 +146,4 @@ if __name__ == "__main__":
     print(f"Test loss: {test_loss['loss'].item()}")
 
     print("\nTest completato con successo!")
+

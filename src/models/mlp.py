@@ -19,33 +19,18 @@ class MLP(pl.LightningModule):
         output = self.output(x)
         return output
     
+# Test MLP
 if __name__ == "__main__":
-    print("Test: PrivacyMLP")
+    input_dim = 256  # From CNN feature extractor
+    batch_size = 8
+    model = MLP(input_dim=input_dim)
 
-    # Parametri di input (output del ConvBackbone)
-    input_dim = 256  # La dimensione dell'output del ConvBackbone (flattened size)
+    # Random input tensor simulating feature vectors from CNN
+    features = torch.randn(batch_size, input_dim)
 
-    # Numero di classi per ciascun metadato
-    output_dim_skin_color = 4  # Numero di classi per skin color
-    output_dim_gender = 1  # Numero di classi per gender (regressione logistica)
-    output_dim_age = 1  # Numero di classi per age (regressione)
+    # Forward pass
+    logits = model(features)
+    print(f"Logits Shape: {logits.shape}")  # Expecting (batch_size, output_dim)
 
-    # Modelli MLP per ciascun metadato
-    model_skin_color = MLP(input_dim, output_dim_skin_color)
-    model_gender = MLP(input_dim, output_dim_gender)
-    model_age = MLP(input_dim, output_dim_age)
 
-    # Creiamo l'input (output del ConvBackbone)
-    x_skin_color = torch.randn(8, input_dim)  # Output del ConvBackbone
-    output_skin_color = model_skin_color(x_skin_color)
-    print(f"Skin color output shape: {output_skin_color.shape}")  # Dovrebbe essere (batch_size, 4)
-
-    x_gender = torch.randn(8, input_dim)  # Output del ConvBackbone
-    output_gender = model_gender(x_gender)
-    print(f"Gender output shape: {output_gender.shape}")  # Dovrebbe essere (batch_size, 1)
-
-    x_age = torch.randn(8, input_dim)  # Output del ConvBackbone
-    output_age = model_age(x_age)
-    print(f"Age output shape: {output_age.shape}")  # Dovrebbe essere (batch_size, 1)
-
-    print("\nTest MLP completato con successo!")
+#self.classifier = MLP(input_dim=256, output_dim=9)

@@ -12,7 +12,7 @@ def load_dataset(cfg):
         Tuple contenente train, val, test dataset.
     """
     # Ottenere le trasformazioni per i dataset
-    train_transform, val_transform, test_transform = get_transform(cfg.pose_dataset.resize, cfg.pose_dataset.fps)
+    train_transform, val_transform, test_transform = get_transform(cfg.pose_dataset.resize_h, cfg.pose_dataset.resize_w, cfg.pose_dataset.fps)
     
     # Inizializzazione dataset
     train, val, test = None, None, None
@@ -100,7 +100,7 @@ class SelectFrames:
         indices = torch.linspace(0, num_frames - 1, steps=self.fps).long()
         return x[:, indices, :, :]
 
-def get_transform(resize, fps):
+def get_transform(resize_h, resize_w, fps):
     """
     Returns the transformations for the training, validation, and test datasets.
 
@@ -113,7 +113,7 @@ def get_transform(resize, fps):
     """
     # Common transformations
     common_transforms = transforms.Compose([
-        transforms.Resize((resize, resize)),
+        transforms.Resize((resize_h, resize_w)),
         SelectFrames(fps)
     ])
 
@@ -122,3 +122,4 @@ def get_transform(resize, fps):
     test_transform = common_transforms
 
     return train_transform, val_transform, test_transform
+

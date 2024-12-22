@@ -1,43 +1,48 @@
 defaults:
   - _self_
-  - privacy
   - dataset
-  - wandb
   
+wandb:
+  entity: "c-bruchi-university-of-pisa"
+  project: "pat-mon"
+
 task: 'classification'
 model : null
 seed: -1
 
 in_channels: 3
 depth: 20
-width: 256
-height: 256
+width: 640
+height: 480
 output_dim : 9
+conv_backbone: 'YOLOn'
+freeze: True
 
 pose_dataset:
   path: ./dataset/position
   csv_path: ./dataset/position.csv
-  resize: 256
+  resize_h: 256
+  resize_w: 256
   fps: 20
 
 train:
   save_path: "./models/"
-  batch_size: 128
+  batch_size: 1
   lr: 1e-5
-  max_epochs: 10
+  max_epochs: 2
   num_workers: 1
-  patient_ids: [123, 234]
+  patient_ids: [123]
   camera_type: 0
-  accelerator: "gpu"
-  devices: [0]
+  accelerator: "auto"
+  devices: 1
   seed: -1
 
 val:
-  patient_ids: [345]
+  patient_ids: [123]
   camera_type: 0
 
 test:
-  patient_ids: [345]
+  patient_ids: [123]
   camera_type: 0
 
 log:  
@@ -45,3 +50,4 @@ log:
 
 hydra.run.dir: .
 hydra.output_subdir: ${hydra:runtime.cwd}/outputs/${now:%Y-%m-%d_%H-%M-%S}
+
