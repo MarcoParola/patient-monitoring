@@ -11,4 +11,8 @@ privacy_map:
   male: 0
   female: 1
 
+loss_weights:
+  alpha: 1.0
+  beta: 0.5
+
 path_privacy: "./data/"
