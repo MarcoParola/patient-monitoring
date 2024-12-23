@@ -35,16 +35,16 @@ class PrivacyClassifier(pl.LightningModule):
         pred_skin_color, pred_gender, pred_age = self(video_input)
 
         # Calcolo delle loss
-        loss_skin_color = F.cross_entropy(pred_skin_color, labels['skin_color'])
-        loss_gender = F.binary_cross_entropy_with_logits(pred_gender, labels['gender'].unsqueeze(1))
-        loss_age = F.mse_loss(pred_age, labels['age'].float().unsqueeze(1))
+        loss_skin_color = F.cross_entropy(pred_skin_color, labels[1])
+        loss_gender = F.binary_cross_entropy_with_logits(pred_gender, labels[2].unsqueeze(1))
+        loss_age = F.mse_loss(pred_age, labels[3].unsqueeze(1).float())
 
         # Somma delle loss
         total_loss = loss_skin_color + loss_gender + loss_age
 
         # Calcolo dell'accuracy
-        acc_skin_color = self.compute_accuracy_multi_class(pred_skin_color, labels['skin_color'])
-        acc_gender = self.compute_accuracy_binary(pred_gender, labels['gender'])
+        acc_skin_color = self.compute_accuracy_multi_class(pred_skin_color, labels[1])
+        acc_gender = self.compute_accuracy_binary(pred_gender, labels[2])
 
         # Logging delle metriche
         self.log(f"{step_type}_loss_skin_color", loss_skin_color, prog_bar=True, on_step=True, on_epoch=True)

@@ -126,8 +126,7 @@ class PoseDatasetByPatientsPrivacy(PoseDatasetByPatients):
 
         Returns:
             video_tensor (Tensor): Dati video come tensore PyTorch.
-            event (dict): Evento associato al video.
-            privacy_metadata (dict): Metadati relativi alla privacy.
+            event (dict): Evento combinato con i metadati relativi alla privacy.
         """
         # Ottieni video_tensor e label (l'evento) dalla classe madre
         video_tensor, event = super().__getitem__(index)
@@ -138,29 +137,32 @@ class PoseDatasetByPatientsPrivacy(PoseDatasetByPatients):
         # Recupera i metadati sulla privacy per il paziente
         privacy_metadata = self.patient_metadata.get(patient_id, {})
 
-        # Converti gender e skin_color in numeri usando privacy_map
-        if "gender" in privacy_metadata:
-            privacy_metadata["gender"] = torch.tensor([self.privacy_map.get(privacy_metadata["gender"], -1)], dtype=torch.int64)
-        if "skin_color" in privacy_metadata:
-            privacy_metadata["skin_color"] = torch.tensor([self.privacy_map.get(privacy_metadata["skin_color"], -1)], dtype=torch.int64)
+        # Converti gender e skin_color in numeri usando privacy_map solo se non sono già interi
+        if "skin_color" in privacy_metadata and not isinstance(privacy_metadata["skin_color"], int):
+            privacy_metadata["skin_color"] = self.privacy_map.get(privacy_metadata["skin_color"], -1)
+        
+        if "gender" in privacy_metadata and not isinstance(privacy_metadata["gender"], int):
+            privacy_metadata["gender"] = self.privacy_map.get(privacy_metadata["gender"], -1)
 
-        # Converte age in un tensor, se presente
+        # Converte age in un intero, se presente
         if "age" in privacy_metadata and privacy_metadata["age"] is not None:
             try:
-                privacy_metadata["age"] = torch.tensor([int(privacy_metadata["age"])], dtype=torch.int64)
+                privacy_metadata["age"] = int(privacy_metadata["age"])
             except ValueError:
-                privacy_metadata["age"] = torch.tensor([-1], dtype=torch.int64)  # Valore predefinito in caso di errore
+                privacy_metadata["age"] = -1  # Valore predefinito in caso di errore
         else:
-            privacy_metadata["age"] = torch.tensor([-1], dtype=torch.int64)  # Default se non presente
+            privacy_metadata["age"] = -1  # Default se non presente
 
-        return video_tensor, (event, privacy_metadata)
+        labels = (event, privacy_metadata["skin_color"], float(privacy_metadata["gender"]), float(privacy_metadata["age"]))
+
+        return video_tensor, labels
 
 if __name__ == "__main__":
     # Parameters for the test
     root = "dataset/position"
     csv_path = "dataset/position.csv"
     root_privacy = "data"
-    patient_ids = [123, 234]
+    patient_ids = [123]
     transform = None
     camera_type = 0
     pose_map = {
@@ -197,23 +199,23 @@ if __name__ == "__main__":
         print(f"Label: {label}")
         break  # Esegui solo un batch per test
 
-    # Test della classe PoseDatasetByPatientsPrivacy
-    print("\nTesting PoseDatasetByPatientsPrivacy...")
-    dataset_by_patients_privacy = PoseDatasetByPatientsPrivacy(
-        root_privacy=root_privacy,
-        privacy_map=privacy_map,
+    # Inizializza il dataset
+    dataset = PoseDatasetByPatientsPrivacy(
         root=root,
         csv_path=csv_path,
         patient_ids=patient_ids,
         transform=transform,
         camera_type=camera_type,
-        pose_map=pose_map
+        pose_map=pose_map,
+        root_privacy=root_privacy,
+        privacy_map=privacy_map
     )
 
-    dataloader_by_patients_privacy = DataLoader(dataset_by_patients_privacy, batch_size=2, shuffle=True)
+    # Crea un DataLoader per iterare sul dataset
+    dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
 
-    for video_tensor, (event, privacy_metadata) in dataloader_by_patients_privacy:
-        print(f"Video tensor shape: {video_tensor.shape}")
-        print(f"Event: {event}")
-        print(f"Privacy metadata: {privacy_metadata}")
+    # Itera sui dati e stampa i risultati
+    for video_tensor, event in dataloader:
+        print("Video Tensor Shape:", video_tensor.shape)
+        print("Event:", event)
         break  # Esegui solo un batch per test

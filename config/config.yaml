@@ -4,7 +4,7 @@ defaults:
   - dataset
   - wandb
   
-task: 'classification'
+task: 'privacy'
 model : null
 seed: -1
 
@@ -22,18 +22,18 @@ pose_dataset:
 
 train:
   save_path: "./models/"
-  batch_size: 128
+  batch_size: 2
   lr: 1e-5
   max_epochs: 10
   num_workers: 1
-  patient_ids: [123, 234]
+  patient_ids: [123]
   camera_type: 0
-  accelerator: "gpu"
-  devices: [0]
+  accelerator: "cpu"
+  devices: 1
   seed: -1
 
 val:
-  patient_ids: [345]
+  patient_ids: [234]
   camera_type: 0
 
 test:
