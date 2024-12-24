@@ -4,7 +4,7 @@ defaults:
   - dataset
   - wandb
   
-task: 'privacy'
+task: 'classification_privacy'
 model : null
 seed: -1
 
@@ -18,7 +18,7 @@ pose_dataset:
   path: ./dataset/position
   csv_path: ./dataset/position.csv
   resize: 256
-  fps: 20
+  fps: 2
 
 train:
   save_path: "./models/"

@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 from torch.optim import Adam
@@ -6,12 +7,23 @@ from src.models.pose_classifier import PoseClassifier
 from src.models.privacy_classifier import PrivacyClassifier
 from src.models.video_privatizer import VideoPrivatizer
 
+class Conv3DModel(nn.Module):
+    def __init__(self):
+        super(Conv3DModel, self).__init__()
+        # Define a 3D convolutional layer with a 1x1x1 kernel
+        self.conv3d = nn.Conv3d(in_channels=3, out_channels=3, kernel_size=1, stride=1, padding=0)
+        
+    def forward(self, x):
+        x = self.conv3d(x)
+        return x, x
+
 class PrivacyGAN(pl.LightningModule):
     def __init__(self, input_shape=(1, 3, 20, 256, 256), output_dim_pose=9, 
                  output_dim_privacy=(4, 1, 1), alpha=1.0, beta=0.5):
         super(PrivacyGAN, self).__init__()
         
-        self.generator = VideoPrivatizer(channels=input_shape[1])
+        #self.generator = PrivacyClassifier(channels=input_shape[1])
+        self.generator = Conv3DModel()
         self.pose_classifier = PoseClassifier(input_shape, output_dim_pose)
         self.privacy_classifier = PrivacyClassifier(input_shape, output_dim_privacy)
         

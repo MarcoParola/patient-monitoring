@@ -45,7 +45,7 @@ def load_dataset(cfg):
             pose_map=cfg.pose_map
         )
 
-    elif cfg.task == "privacy":
+    elif cfg.task == "privacy" or cfg.task == "classification_privacy" or cfg.task == "privatizer":
         from src.datasets.pose.pose_dataset import PoseDatasetByPatientsPrivacy
 
         train = PoseDatasetByPatientsPrivacy(

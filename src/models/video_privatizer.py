@@ -40,9 +40,13 @@ class VideoPrivatizer(pl.LightningModule):
         # Forward pass to get output and intermediate features
         output, intermediate = self(x)
 
-        # Log the mean of the output for debugging and monitoring purposes
-        #self.log(f"{step_type}_output_mean", output.mean(), prog_bar=True, on_step=True, on_epoch=True)
-        return {'output': output, 'intermediate': intermediate}
+        # Calcolo della loss
+        loss = F.mse_loss(output, x)
+
+        # Log del valore medio dell'output
+        self.log(f"{step_type}_loss", loss, prog_bar=True, on_step=True, on_epoch=True)
+
+        return {'loss': loss, 'output': output, 'intermediate': intermediate}
 
     def training_step(self, batch, batch_idx):
         return self._common_step(batch, step_type="train")
