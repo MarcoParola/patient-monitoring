@@ -4,7 +4,7 @@ defaults:
   - dataset
   - wandb
   
-task: 'classification_privacy'
+task: 'privacy'
 model : null
 seed: -1
 
@@ -24,7 +24,7 @@ train:
   save_path: "./models/"
   batch_size: 2
   lr: 1e-5
-  max_epochs: 10
+  max_epochs: 2
   num_workers: 1
   patient_ids: [123]
   camera_type: 0
