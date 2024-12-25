@@ -3,18 +3,18 @@ import torch
 
 def load_dataset(cfg):
     """
-    Carica i dataset di training, validation e test in base alla configurazione specificata.
+    Loads the training, validation, and test datasets based on the provided configuration.
     
     Args:
-        cfg: Configurazione con informazioni su path, task e trasformazioni.
+        cfg: Configuration with paths, task type, and transformations.
 
     Returns:
-        Tuple contenente train, val, test dataset.
+        Tuple containing train, validation, and test datasets.
     """
-    # Ottenere le trasformazioni per i dataset
-    train_transform, val_transform, test_transform = get_transform(cfg.pose_dataset.resize, cfg.pose_dataset.fps)
+    # Get the transformations for the datasets
+    train_transform, val_transform, test_transform = get_transform(cfg.pose_dataset.resize_width, cfg.pose_dataset.resize_height, cfg.pose_dataset.fps)
     
-    # Inizializzazione dataset
+    # Initialize datasets
     train, val, test = None, None, None
 
     if cfg.task == "classification":
@@ -87,7 +87,7 @@ class SelectFrames:
 
     def __call__(self, x):
         """
-        Select frames uniformly distributed from the sequence.
+        Selects frames uniformly distributed from the sequence.
 
         Args:
             x (torch.Tensor): Tensor of shape (C, T, H, W), where T is the number of frames.
@@ -103,20 +103,21 @@ class SelectFrames:
         indices = torch.linspace(0, num_frames - 1, steps=self.fps).long()
         return x[:, indices, :, :]
 
-def get_transform(resize, fps):
+def get_transform(resize_width, resize_height, fps):
     """
     Returns the transformations for the training, validation, and test datasets.
 
     Args:
-        resize: Tuple with the new dimensions (height, width).
+        resize_width: The width to resize the images to.
+        resize_height: The height to resize the images to.
         fps: Number of desired frames.
 
     Returns:
-        Tuple containing train_transform, val_transform, test_transform.
+        Tuple containing train_transform, val_transform, and test_transform.
     """
     # Common transformations
     common_transforms = transforms.Compose([
-        transforms.Resize((resize, resize)),
+        transforms.Resize((resize_height, resize_width)),
         SelectFrames(fps)
     ])
 

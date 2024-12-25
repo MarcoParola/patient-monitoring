@@ -17,20 +17,25 @@ output_dim : 9
 pose_dataset:
   path: ./dataset/position
   csv_path: ./dataset/position.csv
-  resize: 256
+  resize_width: 256
+  resize_height: 256
   fps: 2
 
 train:
   save_path: "./models/"
   batch_size: 2
-  lr: 1e-5
-  max_epochs: 2
+  max_epochs: 1
   num_workers: 1
   patient_ids: [123]
   camera_type: 0
   accelerator: "cpu"
   devices: 1
   seed: -1
+
+learning_rates:
+  pose: 1e-4
+  privatizer: 1e-4
+  privacy: 1e-4
 
 val:
   patient_ids: [234]
@@ -40,7 +45,7 @@ test:
   patient_ids: [345]
   camera_type: 0
 
-log:  
+log:
   path: "./logs/"
 
 hydra.run.dir: .

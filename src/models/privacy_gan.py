@@ -1,26 +1,41 @@
 import torch
-import torch.nn as nn
 import pytorch_lightning as pl
 from torch.optim import Adam
+import torch.nn.functional as F
 from src.models.video_privatizer import VideoPrivatizer
 from src.models.pose_classifier import PoseClassifier
 from src.models.privacy_classifier import PrivacyClassifier
 
 class PrivacyGAN(pl.LightningModule):
-    def __init__(self, channels, output_dim_pose, output_dim_privacy, loss_weights):
+    def __init__(self, channels, output_dim_pose, output_dim_privacy, loss_weights, learning_rates):
+        """
+        Initialize PrivacyGAN.
+        
+        Args:
+            channels (int): Number of input channels.
+            output_dim_pose (int): Number of pose classification output dimensions.
+            output_dim_privacy (tuple): Output dimensions for the privacy classifier.
+            loss_weights (tuple): Loss weights for pose and privacy losses (alpha, beta).
+            learning_rates (tuple): Learning rates for the privatizer, pose classifier, and privacy classifier.
+        """
         super(PrivacyGAN, self).__init__()
         
         # Set manual optimization
         self.automatic_optimization = False
         
         # Initialize components
-        self.video_privatizer = VideoPrivatizer(channels=channels)
-        self.pose_classifier = PoseClassifier(channels=channels, output_dim=output_dim_pose)
-        self.privacy_classifier = PrivacyClassifier(channels=channels, output_dim=output_dim_privacy)
+        self.video_privatizer = VideoPrivatizer(channels=channels, learning_rate=learning_rates[0])
+        self.pose_classifier = PoseClassifier(channels=channels, output_dim=output_dim_pose, learning_rate=learning_rates[1])
+        self.privacy_classifier = PrivacyClassifier(channels=channels, output_dim=output_dim_privacy, learning_rate=learning_rates[2])
         
         # Loss weights
         self.alpha = loss_weights[0]
         self.beta = loss_weights[1]
+
+        # Learning rates for optimizers
+        self.lr_privatizer = learning_rates[0]
+        self.lr_pose = learning_rates[1]
+        self.lr_privacy = learning_rates[2]
 
     def forward(self, x):
         privatized_video, _ = self.video_privatizer(x)
@@ -39,7 +54,7 @@ class PrivacyGAN(pl.LightningModule):
         opt_pose.zero_grad()
         privatized_video, _ = self.video_privatizer(x)
         pose_pred = self.pose_classifier(privatized_video.detach())
-        pose_loss = nn.functional.cross_entropy(pose_pred, labels[0])
+        pose_loss = F.cross_entropy(pose_pred, labels[0])
         self.manual_backward(pose_loss)
         opt_pose.step()
         
@@ -48,11 +63,11 @@ class PrivacyGAN(pl.LightningModule):
         privatized_video, _ = self.video_privatizer(x)
         privacy_preds = self.privacy_classifier(privatized_video.detach())
         
-        privacy_loss_skin = nn.functional.cross_entropy(privacy_preds[0], labels[1])
-        privacy_loss_gender = nn.functional.binary_cross_entropy_with_logits(
+        privacy_loss_skin = F.cross_entropy(privacy_preds[0], labels[1])
+        privacy_loss_gender = F.binary_cross_entropy_with_logits(
             privacy_preds[1], labels[2].unsqueeze(1)
         )
-        privacy_loss_age = nn.functional.mse_loss(
+        privacy_loss_age = F.mse_loss(
             privacy_preds[2], labels[3].unsqueeze(1).float()
         )
         privacy_loss = privacy_loss_skin + privacy_loss_gender + privacy_loss_age
@@ -66,13 +81,13 @@ class PrivacyGAN(pl.LightningModule):
         privacy_preds = self.privacy_classifier(privatized_video)
         
         # Calculate losses for privatizer update
-        pose_loss_for_privatizer = nn.functional.cross_entropy(pose_pred, labels[0])
+        pose_loss_for_privatizer = F.cross_entropy(pose_pred, labels[0])
         
-        privacy_loss_skin = nn.functional.cross_entropy(privacy_preds[0], labels[1])
-        privacy_loss_gender = nn.functional.binary_cross_entropy_with_logits(
+        privacy_loss_skin = F.cross_entropy(privacy_preds[0], labels[1])
+        privacy_loss_gender = F.binary_cross_entropy_with_logits(
             privacy_preds[1], labels[2].unsqueeze(1)
         )
-        privacy_loss_age = nn.functional.mse_loss(
+        privacy_loss_age = F.mse_loss(
             privacy_preds[2], labels[3].unsqueeze(1).float()
         )
         privacy_loss_for_privatizer = privacy_loss_skin + privacy_loss_gender + privacy_loss_age
@@ -110,13 +125,13 @@ class PrivacyGAN(pl.LightningModule):
         privatized_video, pose_pred, privacy_preds = self(x)
         
         # Calculate losses
-        pose_loss = nn.functional.cross_entropy(pose_pred, labels[0])
+        pose_loss = F.cross_entropy(pose_pred, labels[0])
         
-        privacy_loss_skin = nn.functional.cross_entropy(privacy_preds[0], labels[1])
-        privacy_loss_gender = nn.functional.binary_cross_entropy_with_logits(
+        privacy_loss_skin = F.cross_entropy(privacy_preds[0], labels[1])
+        privacy_loss_gender = F.binary_cross_entropy_with_logits(
             privacy_preds[1], labels[2].unsqueeze(1)
         )
-        privacy_loss_age = nn.functional.mse_loss(
+        privacy_loss_age = F.mse_loss(
             privacy_preds[2], labels[3].unsqueeze(1).float()
         )
         privacy_loss = privacy_loss_skin + privacy_loss_gender + privacy_loss_age
@@ -149,13 +164,13 @@ class PrivacyGAN(pl.LightningModule):
         privatized_video, pose_pred, privacy_preds = self(x)
         
         # Calculate losses
-        pose_loss = nn.functional.cross_entropy(pose_pred, labels[0])
+        pose_loss = F.cross_entropy(pose_pred, labels[0])
         
-        privacy_loss_skin = nn.functional.cross_entropy(privacy_preds[0], labels[1])
-        privacy_loss_gender = nn.functional.binary_cross_entropy_with_logits(
+        privacy_loss_skin = F.cross_entropy(privacy_preds[0], labels[1])
+        privacy_loss_gender = F.binary_cross_entropy_with_logits(
             privacy_preds[1], labels[2].unsqueeze(1)
         )
-        privacy_loss_age = nn.functional.mse_loss(
+        privacy_loss_age = F.mse_loss(
             privacy_preds[2], labels[3].unsqueeze(1).float()
         )
         privacy_loss = privacy_loss_skin + privacy_loss_gender + privacy_loss_age
@@ -184,7 +199,13 @@ class PrivacyGAN(pl.LightningModule):
         return total_loss
 
     def configure_optimizers(self):
-        opt_privatizer = Adam(self.video_privatizer.parameters(), lr=1e-4)
-        opt_pose = Adam(self.pose_classifier.parameters(), lr=1e-4)
-        opt_privacy = Adam(self.privacy_classifier.parameters(), lr=1e-4)
+        """
+        Configure optimizers for the model components.
+        
+        Returns:
+            list: List of Adam optimizers for each component.
+        """
+        opt_privatizer = Adam(self.video_privatizer.parameters(), lr=self.lr_privatizer)
+        opt_pose = Adam(self.pose_classifier.parameters(), lr=self.lr_pose)
+        opt_privacy = Adam(self.privacy_classifier.parameters(), lr=self.lr_privacy)
         return [opt_privatizer, opt_pose, opt_privacy]
