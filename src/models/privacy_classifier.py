@@ -8,16 +8,16 @@ from src.models.mlp import MLP
 
 # PrivacyClassifier che unisce il backbone convoluzionale con MLP per ciascun task
 class PrivacyClassifier(pl.LightningModule):
-    def __init__(self, input_shape=(1, 3, 20, 256, 256), output_dim=(4, 1, 1)):
+    def __init__(self, channels, output_dim=(4, 1, 1)):
         super(PrivacyClassifier, self).__init__()
         
         # Backbone convoluzionale
-        self.conv_backbone = CNN3DLightning(in_channels=input_shape[1])
+        self.conv_backbone = CNN3DLightning(in_channels=channels)
         
         # MLP per ogni tipo di metadato
-        self.mlp_skin_color = MLP(input_dim=self.conv_backbone.feature_dim, output_dim=output_dim[0])
-        self.mlp_gender = MLP(input_dim=self.conv_backbone.feature_dim, output_dim=output_dim[1])
-        self.mlp_age = MLP(input_dim=self.conv_backbone.feature_dim, output_dim=output_dim[2])
+        self.mlp_skin_color = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[0])
+        self.mlp_gender = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[1])
+        self.mlp_age = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[2])
 
     def forward(self, video_input):
         # Caratteristiche video (output dal ConvBackbone)

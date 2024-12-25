@@ -14,31 +14,24 @@ class VideoPrivatizer(pl.LightningModule):
         self.conv3 = nn.Conv3d(in_channels=channels, out_channels=channels, kernel_size=(3, 3, 3), padding=(1, 1, 1))
         self.conv4 = nn.Conv3d(in_channels=channels, out_channels=channels, kernel_size=(3, 3, 3), padding=(1, 1, 1))
 
-        self.relu = nn.ReLU()
         # Apply 3D dropout for regularization
         self.dropout = nn.Dropout3d(p=0.1)
 
     def forward(self, x):
-        # Clona l'input per evitare modifiche in-place
-        skip_connection = x.clone()
-
-        # Passaggio attraverso i layer convoluzionali
-        y = self.relu(self.conv1(x))
+        # Pass input through the first convolutional layer followed by ReLU and dropout
+        y = F.relu(self.conv1(x))
         y = self.dropout(y)
 
-        y = self.relu(self.conv2(y))
+        # Repeat for subsequent layers
+        y = F.relu(self.conv2(y))
+        y = self.dropout(y)
+        y = F.relu(self.conv3(y))
+        y = self.dropout(y)
+        y = F.relu(self.conv4(y))
         y = self.dropout(y)
 
-        y = self.relu(self.conv3(y))
-        y = self.dropout(y)
-
-        y = self.relu(self.conv4(y))
-        y = self.dropout(y)
-
-        # Somma delle connessioni residuali
-        output = skip_connection + y
-
-        return output, y
+        # Add the input (skip connection) to the output to preserve information
+        return x + y, y
 
     def _common_step(self, batch, step_type):
         # Unpack the batch (input video and labels)

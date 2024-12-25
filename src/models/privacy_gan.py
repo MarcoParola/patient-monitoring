@@ -7,20 +7,20 @@ from src.models.pose_classifier import PoseClassifier
 from src.models.privacy_classifier import PrivacyClassifier
 
 class PrivacyGAN(pl.LightningModule):
-    def __init__(self, input_shape, output_dim_pose, output_dim_privacy, alpha=1.0, beta=1.0):
+    def __init__(self, channels, output_dim_pose, output_dim_privacy, loss_weights):
         super(PrivacyGAN, self).__init__()
         
         # Set manual optimization
         self.automatic_optimization = False
         
         # Initialize components
-        self.video_privatizer = VideoPrivatizer(channels=input_shape[1])
-        self.pose_classifier = PoseClassifier(input_shape=input_shape, output_dim=output_dim_pose)
-        self.privacy_classifier = PrivacyClassifier(input_shape=input_shape, output_dim=output_dim_privacy)
+        self.video_privatizer = VideoPrivatizer(channels=channels)
+        self.pose_classifier = PoseClassifier(channels=channels, output_dim=output_dim_pose)
+        self.privacy_classifier = PrivacyClassifier(channels=channels, output_dim=output_dim_privacy)
         
         # Loss weights
-        self.alpha = alpha
-        self.beta = beta
+        self.alpha = loss_weights[0]
+        self.beta = loss_weights[1]
 
     def forward(self, x):
         privatized_video, _ = self.video_privatizer(x)

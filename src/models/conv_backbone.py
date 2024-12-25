@@ -4,9 +4,10 @@ import pytorch_lightning as pl
 import torch.nn.functional as F
 
 class CNN3DLightning(pl.LightningModule):
-    def __init__(self, in_channels=3, learning_rate=1e-3):
+    def __init__(self, in_channels=3, feature_output_dim=256):
         super(CNN3DLightning, self).__init__()
-        self.learning_rate = learning_rate
+
+        self.feature_output_dim = feature_output_dim
         
         # Block 1
         self.conv1 = nn.Conv3d(in_channels=in_channels, out_channels=16, kernel_size=5, stride=1, padding=3)
@@ -27,8 +28,7 @@ class CNN3DLightning(pl.LightningModule):
         
         # Output feature extractor
         self.flatten = nn.Flatten()
-        self.feature_dim = 64 * 1 * 2 * 2  # Adjusted to match final dimensions
-        self.feature_extractor = nn.Linear(self.feature_dim, 256)
+        self.feature_extractor = nn.Linear(256, self.feature_output_dim)
 
     def forward(self, x):
         x = self.pool1(x)
@@ -74,7 +74,7 @@ class CNN3DLightning(pl.LightningModule):
         self.log('test_acc', acc)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        optimizer = torch.optim.Adam(self.parameters(), lr=1e-4)
         return optimizer
     
 if __name__ == "__main__":
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     model = CNN3DLightning(in_channels=input_channels)
     
     # Test forward
-    x = torch.randn(3, input_channels, 20, 256, 256)
+    x = torch.randn(3, input_channels, 20, 300, 300)
     features = model(x)
     print(f"Features shape: {features.shape}")
 

@@ -7,14 +7,14 @@ from src.models.conv_backbone import CNN3DLightning
 from src.models.mlp import MLP
 
 class PoseClassifier(pl.LightningModule):
-    def __init__(self, input_shape=(1, 3, 20, 256, 256), output_dim=9):
+    def __init__(self, channels, output_dim=9):
         super(PoseClassifier, self).__init__()
 
         # Backbone convoluzionale
-        self.conv_backbone = CNN3DLightning(in_channels=input_shape[1])
+        self.conv_backbone = CNN3DLightning(in_channels=channels)
 
         # MLP per classificazione finale
-        self.mlp = MLP(input_dim=self.conv_backbone.feature_dim, output_dim=output_dim)
+        self.mlp = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim)
 
     def forward(self, video_input):
         # Passaggio forward
