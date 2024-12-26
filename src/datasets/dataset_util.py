@@ -12,7 +12,7 @@ def load_dataset(cfg):
         Tuple containing train, validation, and test datasets.
     """
     # Get the transformations for the datasets
-    train_transform, val_transform, test_transform = get_transform(cfg.pose_dataset.resize_width, cfg.pose_dataset.resize_height, cfg.pose_dataset.fps)
+    train_transform, val_transform, test_transform = get_transform(cfg.pose_dataset.resize_height, cfg.pose_dataset.resize_width, cfg.pose_dataset.fps)
     
     # Initialize datasets
     train, val, test = None, None, None
@@ -103,13 +103,13 @@ class SelectFrames:
         indices = torch.linspace(0, num_frames - 1, steps=self.fps).long()
         return x[:, indices, :, :]
 
-def get_transform(resize_width, resize_height, fps):
+def get_transform(resize_height, resize_width, fps):
     """
     Returns the transformations for the training, validation, and test datasets.
 
     Args:
-        resize_width: The width to resize the images to.
         resize_height: The height to resize the images to.
+        resize_width: The width to resize the images to.
         fps: Number of desired frames.
 
     Returns:
