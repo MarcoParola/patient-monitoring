@@ -11,6 +11,8 @@ privacy_map:
   male: 0
   female: 1
 
+privacy_model_type: "VIDEO_PRIVATIZER"
+
 loss_weights:
   alpha: 1.0
   beta: 0.5

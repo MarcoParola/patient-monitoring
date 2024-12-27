@@ -6,7 +6,7 @@ from torch.optim import Adam
 
 # Define a neural network model for video privacy preservation
 class VideoPrivatizer(pl.LightningModule):
-    def __init__(self, channels, learning_rate):
+    def __init__(self, channels, learning_rate=1e-4):
         """
         A neural network model for video privacy preservation using 3D convolutions.
         Args:

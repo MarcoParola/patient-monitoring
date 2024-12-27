@@ -7,7 +7,7 @@ from src.models.mlp import MLP
 
 # PoseClassifier combines a convolutional backbone with an MLP for pose classification
 class PoseClassifier(pl.LightningModule):
-    def __init__(self, channels, output_dim, learning_rate):
+    def __init__(self, channels, output_dim=9, learning_rate=1e-4):
         """
         Initialize the PoseClassifier model.
         Args:

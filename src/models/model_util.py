@@ -22,7 +22,8 @@ def load_model(cfg):
                 cfg.learning_rates.privatizer, 
                 cfg.learning_rates.pose, 
                 cfg.learning_rates.privacy
-            )
+            ),
+            privacy_model_type=cfg.privacy_model_type
         )
     if cfg.task == "privatizer":
         from src.models.video_privatizer import VideoPrivatizer

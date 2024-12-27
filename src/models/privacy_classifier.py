@@ -7,7 +7,7 @@ from src.models.mlp import MLP
 
 # PrivacyClassifier combines a convolutional backbone with separate MLPs for each task
 class PrivacyClassifier(pl.LightningModule):
-    def __init__(self, channels, output_dim, learning_rate):
+    def __init__(self, channels, output_dim=(4,1,1), learning_rate=1e-4):
         """
         Initialize the PrivacyClassifier model.
         Args:
