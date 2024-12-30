@@ -9,7 +9,7 @@ import flatdict
 from omegaconf import OmegaConf
 
 from src.models.model_util import load_model
-from src.datasets.dataset_util import load_dataset
+from src.datasets.dataset_util import *
 
 
 @hydra.main(config_path="config", config_name="config", version_base=None)
@@ -25,7 +25,6 @@ def main(cfg):
     # Caricamento del modello e dataset
     model = load_model(cfg)
     train, val, test = load_dataset(cfg)
-
     # DataLoader per train, val e test
     train_loader = DataLoader(
         train, batch_size=cfg.train.batch_size, shuffle=True,

@@ -7,14 +7,7 @@ from pathlib import Path
 class OpenPoseAPI:
     def __init__(self, video_path= None, detect_face=False, detect_hands=False, fps=30 ):
          # Determinare il numero di feature in base ai parametri di rilevamento
-        self.feature_dim = 18  # Numero base di keypoints per OpenPose senza viso né mani
-        if detect_face:
-            self.feature_dim += 70  # Aggiungi 70 keypoints per il viso
-        if detect_hands:
-            self.feature_dim += 42  # Aggiungi 21 keypoints per ogni mano (2 mani)
-
-        self.feature_dim = 75  # Ogni keypoint ha 3 coordinate (x, y, confidence), date per ogni frame, per 5 secondi
-
+        
         if video_path is not None:            
             self.keypoints = self.process_video_with_openpose(video_path, detect_face=detect_face, detect_hands=detect_hands)
             

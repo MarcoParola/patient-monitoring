@@ -29,3 +29,4 @@ def ensure_bgr(frame):
     elif len(frame.shape) == 3 and frame.shape[2] == 1:  # Greyscale con un canale esplicito (H, W, 1)
         frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
     return frame
+

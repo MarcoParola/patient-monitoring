@@ -10,50 +10,47 @@ from src.models.mlp import MLP
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
+from .model_util import label_to_one_hot
 
 class PoseClassifier(pl.LightningModule):
-    def __init__(self, input_shape=(1, 3, 20, 640, 480), output_dim=9, backbone="CNN3D", freeze=True, detect_face=False, detect_hands=False, fps = 30):
+    def __init__(self, input_shape=(1, 3, 20, 640, 480), output_dim=9, backbone="CNN3D", freeze=False, detect_face=False, detect_hands=False, fps = 30, model_size="n"):
         super(PoseClassifier, self).__init__()
-        if (backbone == "YOLOn"):
-            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11n-pose.pt").eval()
-        elif (backbone == "YOLOx"):
-            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11x-pose.pt")
-        elif (backbone == "YOLOl"):
-            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11l-pose.pt")
-        elif (backbone == "YOLOm"):
-            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11m-pose.pt")
-        elif (backbone == "YOLOs"):
-            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11s-pose.pt")
-        elif (backbone == "CNN3D"):
+        self.conv_backbone = None
+        if (backbone == "YOLO"):
+            self.feature_dim = 17 * 2  # Numero di keypoints per YOLO
+        if (backbone == "CNN3D"):
             self.conv_backbone = CNN3DLightning(in_channels=input_shape[1])
-        else:
+        elif (backbone == "OpenPose"):
             self.conv_backbone = OpenPoseAPI(detect_face=detect_face, detect_hands=detect_hands, fps=fps)
-       
-        if (freeze):
-            for param in self.conv_backbone.parameters():
-                param.requires_grad = False
+            self.feature_dim = 18  # Numero base di keypoints per OpenPose senza viso né mani
+            if detect_face:
+                self.feature_dim += 70  # Aggiungi 70 keypoints per il viso
+            if detect_hands:
+                self.feature_dim += 42  # Aggiungi 21 keypoints per ogni mano (2 mani)
 
+            self.feature_dim = 75  # Ogni keypoint ha 3 coordinate (x, y, confidence), date per ogni frame, per 5 secondi
+
+       
         # MLP per classificazione finale
-        self.mlp = MLP(input_dim=self.conv_backbone.feature_dim, output_dim=output_dim)
+        self.mlp = MLP(input_dim=self.feature_dim, output_dim=output_dim)
         self.test_outputs = [] 
         self.output_dim = output_dim
         
 
     def forward(self, video_input):
-        if (self.conv_backbone.__class__.__name__ != "OpenPose"):
+        if (self.conv_backbone.__class__.__name__ == "CNN3DLightning"):
             video_input = self.conv_backbone(video_input)
-        print(video_input.shape)
+            video_input = video_input.flatten()
+    
         output = self.mlp(video_input)
         return output
 
 
     def _common_step(self, batch, step_type):
         video_input, labels = batch
-
+        
         # Predizione
         pred = self(video_input)
-
-        # Calcolo della loss
         loss = F.cross_entropy(pred, labels)
 
         # Logging delle metriche con WandB tramite self.log

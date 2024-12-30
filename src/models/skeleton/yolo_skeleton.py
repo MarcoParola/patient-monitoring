@@ -6,15 +6,16 @@ import numpy as np
 from src.models.skeleton.utils import *
 
 class YOLOPoseAPI(pl.LightningModule):
-    def __init__(self, model_path):
+    def __init__(self, model_size="n"):
         """
         Inizializza il modulo Lightning per YOLO Pose.
         :param model_path: Percorso al file YOLO pre-addestrato (.pt).
         :param feature_dim: Dimensione dell'output del backbone.
         """
         super(YOLOPoseAPI, self).__init__()
-        self.model = YOLO(model_path).requires_grad_(False)
-        self.feature_dim = 17*3
+        model_path = os.path.join(f"src/models/skeleton/yolo/yolo11{model_size}-pose.pt")
+        self.model = YOLO(model_path)
+        self.feature_dim = 17*2
         
 
     def forward(self, frame):
@@ -26,8 +27,8 @@ class YOLOPoseAPI(pl.LightningModule):
         frame = ensure_bgr(frame)  # Garantisce il formato BGR
         results = self.model.predict(frame)
         keypoints = self.extract_keypoints(results)
-        print(keypoints.size())
-        return keypoints
+        
+        return keypoints  # Appiattisce i keypoint in un tensore
 
     def extract_keypoints(self, results):
         """
@@ -35,14 +36,15 @@ class YOLOPoseAPI(pl.LightningModule):
         :param results: Risultati YOLO.
         :return: Tensor contenente i keypoint con shape (batch_size, num_keypoints, 2).
         """
-        keypoints = []
+        keypoints_list = []  # Utilizza una lista per raccogliere i tensori dei keypoint
         for result in results:
-            if len(result.keypoints) > 0:
-                kp = result.keypoints[:, :2] 
+            if hasattr(result, 'keypoints') and result.keypoints.has_visible:
+                # Estrai i keypoints da result.keypoints.xy, che ha forma (1, 17, 2)
+                kp = result.keypoints.xy[0, :, :]  # Estrai le coordinate (x, y) dei keypoints
             else:
-                kp = torch.zeros((17, 2)) 
-            keypoints.append(kp)
-        return torch.stack(keypoints)  
+                # Se non ci sono keypoints visibili, crea un array di zeri di forma (17, 2)
+                kp = torch.zeros((17, 2))
+            
+            keypoints_list.append(kp)  # Aggiungi il tensore dei keypoint alla lista
 
-   
-
+        return torch.stack(keypoints_list)  # Combina i tensori in uno solo

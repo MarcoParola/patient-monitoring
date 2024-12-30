@@ -12,23 +12,27 @@ seed: -1
 
 in_channels: 3
 depth: 20
-width: 640
-height: 480
+width: 1920
+height: 1080
 output_dim : 9
-conv_backbone: 'YOLOn'
-freeze: False
-detect_hands: False
-detect_face: False
-extract_keypoints: False
+conv_backbone: 'YOLO'
+extract_keypoints: True
+
+yolo:
+  freeze: True
+  model_size: "n"
+openpose:
+  detect_hands: False
+  detect_face: False
 
 
 pose_dataset:
   path: dataset/position
   csv_path: dataset/position.csv
-  processed_csv: dataset/position_keypoints.csv
-  resize_h: 640
-  resize_w: 480
-  fps: 1
+  processed_csv: dataset/keypoints_YOLO.csv
+  resize_h: 256
+  resize_w: 256
+  fps: 3
 
 train:
   save_path: "./models/"
@@ -43,11 +47,11 @@ train:
   seed: -1
 
 val:
-  patient_ids: [234]
+  patient_ids: [123]
   camera_type: 0
 
 test:
-  patient_ids: [345]
+  patient_ids: [123]
   camera_type: 0
 
 log:  
