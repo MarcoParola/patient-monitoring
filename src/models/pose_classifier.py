@@ -5,43 +5,47 @@ import torch.nn.functional as F
 from torch.optim import Adam
 from src.models.conv_backbone import CNN3DLightning
 from src.models.skeleton.yolo_skeleton import YOLOPoseAPI
-from src.models.skeleton.openpose_skeleton import OpenPoseAPI
+from src.models.skeleton.openpose.openpose_skeleton import OpenPoseAPI
 from src.models.mlp import MLP
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 
 class PoseClassifier(pl.LightningModule):
-    def __init__(self, input_shape=(1, 3, 20, 640, 480), output_dim=9, conv_backbone="CNN3D", freeze=True):
+    def __init__(self, input_shape=(1, 3, 20, 640, 480), output_dim=9, backbone="CNN3D", freeze=True, detect_face=False, detect_hands=False, fps = 30):
         super(PoseClassifier, self).__init__()
- 
-        if (conv_backbone == "YOLOn"):
-            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11n-pose.pt").requires_grad_(freeze)
-        elif (conv_backbone == "YOLOx"):
+        if (backbone == "YOLOn"):
+            self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11n-pose.pt").eval()
+        elif (backbone == "YOLOx"):
             self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11x-pose.pt")
-        elif (conv_backbone == "YOLOl"):
+        elif (backbone == "YOLOl"):
             self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11l-pose.pt")
-        elif (conv_backbone == "YOLOm"):
+        elif (backbone == "YOLOm"):
             self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11m-pose.pt")
-        elif (conv_backbone == "YOLOs"):
+        elif (backbone == "YOLOs"):
             self.conv_backbone = YOLOPoseAPI(model_path="src/models/skeleton/yolo/yolo11s-pose.pt")
-        else:
+        elif (backbone == "CNN3D"):
             self.conv_backbone = CNN3DLightning(in_channels=input_shape[1])
-        
-        for param in self.conv_backbone.parameters():
-            param.requires_grad = False
+        else:
+            self.conv_backbone = OpenPoseAPI(detect_face=detect_face, detect_hands=detect_hands, fps=fps)
+       
+        if (freeze):
+            for param in self.conv_backbone.parameters():
+                param.requires_grad = False
 
         # MLP per classificazione finale
         self.mlp = MLP(input_dim=self.conv_backbone.feature_dim, output_dim=output_dim)
         self.test_outputs = [] 
         self.output_dim = output_dim
+        
 
     def forward(self, video_input):
-        # Passaggio forward
-        x_video = self.conv_backbone(video_input)
-        print(x_video.size())
-        output = self.mlp(x_video)
+        if (self.conv_backbone.__class__.__name__ != "OpenPose"):
+            video_input = self.conv_backbone(video_input)
+        print(video_input.shape)
+        output = self.mlp(video_input)
         return output
+
 
     def _common_step(self, batch, step_type):
         video_input, labels = batch

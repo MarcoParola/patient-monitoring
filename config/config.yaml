@@ -16,14 +16,19 @@ width: 640
 height: 480
 output_dim : 9
 conv_backbone: 'YOLOn'
-freeze: True
+freeze: False
+detect_hands: False
+detect_face: False
+extract_keypoints: False
+
 
 pose_dataset:
-  path: ./dataset/position
-  csv_path: ./dataset/position.csv
-  resize_h: 256
-  resize_w: 256
-  fps: 20
+  path: dataset/position
+  csv_path: dataset/position.csv
+  processed_csv: dataset/position_keypoints.csv
+  resize_h: 640
+  resize_w: 480
+  fps: 1
 
 train:
   save_path: "./models/"
@@ -33,16 +38,16 @@ train:
   num_workers: 1
   patient_ids: [123]
   camera_type: 0
-  accelerator: "auto"
+  accelerator: "cpu"
   devices: 1
   seed: -1
 
 val:
-  patient_ids: [123]
+  patient_ids: [234]
   camera_type: 0
 
 test:
-  patient_ids: [123]
+  patient_ids: [345]
   camera_type: 0
 
 log:  
