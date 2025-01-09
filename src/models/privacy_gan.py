@@ -24,23 +24,23 @@ class PrivacyGAN(pl.LightningModule):
         
         # Initialize generator
         if privacy_model_type == "VIDEO_PRIVATIZER":
-            from src.models.video_privatizer import VideoPrivatizer
+            from src.models.privacy_generator.video_privatizer import VideoPrivatizer
             self.video_privatizer = VideoPrivatizer(channels=channels)
             
         elif privacy_model_type == "STYLEGAN2":
-            from src.models.altro_privacy.deep_privacy import StyleGAN2Privatizer
+            from src.models.privacy_generator.deep_privacy import StyleGAN2Privatizer
             self.video_privatizer = StyleGAN2Privatizer(channels=channels)
             
         elif privacy_model_type == "DEEP_PRIVACY2":
-            from src.models.altro_privacy.deep_privacy import DeepPrivacy2Privatizer
+            from src.models.privacy_generator.deep_privacy import DeepPrivacy2Privatizer
             self.video_privatizer = DeepPrivacy2Privatizer(channels=channels)
             
         elif privacy_model_type == "BLUR":
-            from src.models.altro_privacy.privacy_filter import BlurPrivacyFilter
+            from src.models.privacy_generator.privacy_filter import BlurPrivacyFilter
             self.video_privatizer = BlurPrivacyFilter(channels=channels)
             
         elif privacy_model_type == "PIXELATE":
-            from src.models.altro_privacy.privacy_filter import PixelatePrivacyFilter
+            from src.models.privacy_generator.privacy_filter import PixelatePrivacyFilter
             self.video_privatizer = PixelatePrivacyFilter()
         
         # Initilize discriminators

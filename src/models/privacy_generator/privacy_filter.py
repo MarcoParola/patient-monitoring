@@ -177,8 +177,7 @@ class PixelatePrivacyFilter(BasePrivacyFilter):
         
         return x + pixelation_mask, pixelation_mask
 
-
-def test_privacy_filters():
+if __name__ == "__main__":
     """
     Test function to demonstrate usage of privacy filters.
     """
@@ -202,7 +201,3 @@ def test_privacy_filters():
     pixelate_output, pixelate_mask = pixelate_filter(video_input)
     print(f"Pixelation filter output shape: {pixelate_output.shape}")
     print(f"Pixelation mask shape: {pixelate_mask.shape}")
-
-
-if __name__ == "__main__":
-    test_privacy_filters()

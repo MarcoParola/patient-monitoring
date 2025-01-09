@@ -2,12 +2,13 @@ import torch
 import pytorch_lightning as pl
 import torch.nn.functional as F
 from torch.optim import Adam
+from torchmetrics.classification import ConfusionMatrix
 from src.models.conv_backbone import CNN3DLightning
 from src.models.mlp import MLP
 
 # PrivacyClassifier combines a convolutional backbone with separate MLPs for each task
 class PrivacyClassifier(pl.LightningModule):
-    def __init__(self, channels, output_dim=(4,1,1), learning_rate=1e-4):
+    def __init__(self, channels, output_dim=(4, 1, 1), learning_rate=1e-4):
         """
         Initialize the PrivacyClassifier model.
         Args:
@@ -16,17 +17,21 @@ class PrivacyClassifier(pl.LightningModule):
             learning_rate (float): Learning rate for the optimizer.
         """
         super(PrivacyClassifier, self).__init__()
-        
-        # Store the learning rate
         self.learning_rate = learning_rate
-        
-        # Convolutional backbone for feature extraction
         self.conv_backbone = CNN3DLightning(in_channels=channels)
-        
-        # Separate MLPs for each metadata task
         self.mlp_skin_color = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[0])
         self.mlp_gender = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[1])
         self.mlp_age = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[2])
+
+        # Confusion matrix metrics
+        self.confusion_matrix_skin_color = ConfusionMatrix(task="multiclass", num_classes=output_dim[0])
+        self.confusion_matrix_gender = ConfusionMatrix(task="binary")
+
+        # Buffers for validation and test steps
+        self.val_preds_skin_color = []
+        self.val_labels_skin_color = []
+        self.val_preds_gender = []
+        self.val_labels_gender = []
 
     def forward(self, video_input):
         """
@@ -36,14 +41,10 @@ class PrivacyClassifier(pl.LightningModule):
         Returns:
             Tuple[Tensor, Tensor, Tensor]: Predictions for skin color, gender, and age.
         """
-        # Extract features using the convolutional backbone
         x_video = self.conv_backbone(video_input)
-        
-        # Predict each metadata task independently
         output_skin_color = self.mlp_skin_color(x_video)
         output_gender = self.mlp_gender(x_video)
         output_age = self.mlp_age(x_video)
-
         return output_skin_color, output_gender, output_age
 
     def _common_step(self, batch, step_type):
@@ -58,60 +59,27 @@ class PrivacyClassifier(pl.LightningModule):
         video_input, labels = batch
         pred_skin_color, pred_gender, pred_age = self(video_input)
 
-        # Compute loss for each task
         loss_skin_color = F.cross_entropy(pred_skin_color, labels['skin_color'])
         loss_gender = F.binary_cross_entropy_with_logits(pred_gender, labels['gender'].unsqueeze(1))
         loss_age = F.mse_loss(pred_age, labels['age'].unsqueeze(1).float())
 
-        # Sum the losses to compute total loss
         total_loss = loss_skin_color + loss_gender + loss_age
 
-        # Compute accuracy for skin color and gender predictions
-        acc_skin_color = self.compute_accuracy_multi_class(pred_skin_color, labels['skin_color'])
-        acc_gender = self.compute_accuracy_binary(pred_gender, labels['gender'])
-
-        # Log losses and accuracies
-        self.log(f"{step_type}_loss_skin_color", loss_skin_color, prog_bar=True, on_step=True, on_epoch=True)
-        self.log(f"{step_type}_loss_gender", loss_gender, prog_bar=True, on_step=True, on_epoch=True)
-        self.log(f"{step_type}_loss_age", loss_age, prog_bar=True, on_step=True, on_epoch=True)
-        self.log(f"{step_type}_loss", total_loss, prog_bar=True, on_step=True, on_epoch=True)
-
-        self.log(f"{step_type}_acc_skin_color", acc_skin_color, prog_bar=True, on_step=True, on_epoch=True)
-        self.log(f"{step_type}_acc_gender", acc_gender, prog_bar=True, on_step=True, on_epoch=True)
+        if step_type in ["val", "test"]:
+            self.val_preds_skin_color.append(torch.argmax(pred_skin_color, dim=1))
+            self.val_labels_skin_color.append(labels['skin_color'])
+            self.val_preds_gender.append((torch.sigmoid(pred_gender) > 0.5).squeeze(1))
+            self.val_labels_gender.append(labels['gender'])
 
         return total_loss
 
     def training_step(self, batch, batch_idx):
-        """
-        Training step logic.
-        Args:
-            batch (tuple): Training batch data (inputs and labels).
-            batch_idx (int): Index of the current batch.
-        Returns:
-            Tensor: Total loss for the training step.
-        """
         return self._common_step(batch, step_type="train")
 
     def validation_step(self, batch, batch_idx):
-        """
-        Validation step logic.
-        Args:
-            batch (tuple): Validation batch data (inputs and labels).
-            batch_idx (int): Index of the current batch.
-        Returns:
-            Tensor: Total loss for the validation step.
-        """
         return self._common_step(batch, step_type="val")
 
     def test_step(self, batch, batch_idx):
-        """
-        Test step logic.
-        Args:
-            batch (tuple): Test batch data (inputs and labels).
-            batch_idx (int): Index of the current batch.
-        Returns:
-            Tensor: Total loss for the test step.
-        """
         return self._common_step(batch, step_type="test")
 
     def configure_optimizers(self):
@@ -123,43 +91,30 @@ class PrivacyClassifier(pl.LightningModule):
         optimizer = Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
 
-    def on_train_epoch_end(self):
-        """Hook executed at the end of each training epoch."""
-        print("\n** on_train_epoch_end **")
-
     def on_validation_epoch_end(self):
-        """Hook executed at the end of each validation epoch."""
-        print("\n** on_validation_epoch_end **")
+        self._log_confusion_matrices("Validation")
 
     def on_test_epoch_end(self):
-        """Hook executed at the end of each test epoch."""
-        print("\n** on_test_epoch_end **")
+        self._log_confusion_matrices("Test")
 
-    def compute_accuracy_multi_class(self, preds, labels):
-        """
-        Compute accuracy for multi-class predictions.
-        Args:
-            preds (Tensor): Logits predicted by the model for skin color.
-            labels (Tensor): Ground truth labels for skin color.
-        Returns:
-            Tensor: Accuracy score as a scalar tensor.
-        """
-        _, predicted = torch.max(preds, 1)  # Get predicted class
-        correct = (predicted == labels).float().sum()  # Count correct predictions
-        return correct / labels.size(0)
+    def _log_confusion_matrices(self, step_type):
+        # Skin Color Confusion Matrix
+        all_preds_skin_color = torch.cat(self.val_preds_skin_color)
+        all_labels_skin_color = torch.cat(self.val_labels_skin_color)
+        conf_matrix_skin_color = self.confusion_matrix_skin_color(all_preds_skin_color, all_labels_skin_color)
+        print(f"\n{step_type} Confusion Matrix for Skin Color:\n{conf_matrix_skin_color}")
 
-    def compute_accuracy_binary(self, preds, labels):
-        """
-        Compute accuracy for binary predictions.
-        Args:
-            preds (Tensor): Logits predicted by the model for gender.
-            labels (Tensor): Ground truth binary labels for gender.
-        Returns:
-            Tensor: Accuracy score as a scalar tensor.
-        """
-        predicted = (torch.sigmoid(preds) > 0.5).float()  # Convert logits to binary predictions
-        correct = (predicted == labels).float().sum()  # Count correct predictions
-        return correct / labels.size(0)
+        # Gender Confusion Matrix
+        all_preds_gender = torch.cat(self.val_preds_gender)
+        all_labels_gender = torch.cat(self.val_labels_gender)
+        conf_matrix_gender = self.confusion_matrix_gender(all_preds_gender, all_labels_gender)
+        print(f"\n{step_type} Confusion Matrix for Gender:\n{conf_matrix_gender}")
+
+        # Clear buffers
+        self.val_preds_skin_color.clear()
+        self.val_labels_skin_color.clear()
+        self.val_preds_gender.clear()
+        self.val_labels_gender.clear()
 
 if __name__ == "__main__":
     print("Test: PrivacyClassifier")
@@ -195,5 +150,12 @@ if __name__ == "__main__":
     # Test the test_step
     test_loss = model.test_step(batch, batch_idx=0)
     print(f"Test loss: {test_loss.item()}")
+
+    # Simulate the end of an epoch to print confusion matrices
+    model.val_preds_skin_color.append(torch.argmax(output_skin_color, dim=1))
+    model.val_labels_skin_color.append(labels['skin_color'])
+    model.val_preds_gender.append((torch.sigmoid(output_gender) > 0.5).squeeze(1))
+    model.val_labels_gender.append(labels['gender'])
+    model.on_test_epoch_end()
 
     print("\nTest completed successfully!")

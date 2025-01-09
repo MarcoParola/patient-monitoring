@@ -108,13 +108,6 @@ class StyleGAN2Privatizer(pl.LightningModule):
 
 class DeepPrivacy2Privatizer(pl.LightningModule):
     def __init__(self, channels, learning_rate=1e-4):
-        """
-        DeepPrivacy2-based privacy-preserving model as a Lightning Module.
-        
-        Args:
-            channels (int): Number of input channels
-            learning_rate (float): Learning rate for the optimizer
-        """
         super().__init__()
         self.learning_rate = learning_rate
         
@@ -125,7 +118,7 @@ class DeepPrivacy2Privatizer(pl.LightningModule):
             ConvBlock3D(128, 256),
             ConvBlock3D(256, 512)
         ])
-        
+
         # Bottleneck
         self.bottleneck = nn.Sequential(
             nn.Conv3d(512, 512, 3, padding=1),
@@ -136,12 +129,12 @@ class DeepPrivacy2Privatizer(pl.LightningModule):
             nn.LeakyReLU(0.2)
         )
         
-        # Decoder
+        # Decoder - Modified to handle correct channel dimensions
         self.decoder = nn.ModuleList([
-            DeconvBlock3D(512, 256),
-            DeconvBlock3D(512, 128),
-            DeconvBlock3D(256, 64),
-            DeconvBlock3D(128, channels)
+            DeconvBlock3D(512, 256),    # Takes 512 from bottleneck + 512 from skip = 1024
+            DeconvBlock3D(256, 128),    # Takes 256 from prev layer + 256 from skip = 512
+            DeconvBlock3D(128, 64),     # Takes 128 from prev layer + 128 from skip = 256
+            FinalDecoderBlock(64, channels)  # Takes 64 from prev layer + 64 from skip = 128
         ])
         
         # Identity branch
@@ -164,11 +157,12 @@ class DeepPrivacy2Privatizer(pl.LightningModule):
         out = self.bottleneck(out)
         
         # Decoding with skip connections
+        skips = skips[::-1]  # Reverse skip connections
         for i, decoder in enumerate(self.decoder):
-            skip = skips[-(i+1)]
+            skip = skips[i]
+            # Concatenate skip connection
+            out = torch.cat([out, skip], dim=1)
             out = decoder(out)
-            if i < len(self.decoder) - 1:  # Skip last concatenation
-                out = torch.cat([out, skip], dim=1)
         
         # Identity branch
         identity = self.identity(x)
@@ -177,7 +171,7 @@ class DeepPrivacy2Privatizer(pl.LightningModule):
         out = torch.cat([out, identity], dim=1)
         out = self.output(out)
         
-        return out, out
+        return out, identity
 
     def _common_step(self, batch, batch_idx, step_type):
         x, _ = batch
@@ -185,7 +179,7 @@ class DeepPrivacy2Privatizer(pl.LightningModule):
         
         # Calculate losses
         recon_loss = F.mse_loss(privatized, x)
-        identity_loss = F.mse_loss(self.identity(x), x)
+        identity_loss = F.mse_loss(features, x)
         privacy_loss = torch.mean(torch.abs(privatized - x))
         
         total_loss = recon_loss + 0.1 * privacy_loss + 0.05 * identity_loss
@@ -272,7 +266,8 @@ class DeconvBlock3D(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.conv = nn.Sequential(
-            nn.ConvTranspose3d(in_channels, out_channels, 3, padding=1),
+            # in_channels * 2 accounts for the skip connection concatenation
+            nn.ConvTranspose3d(in_channels * 2, out_channels, 3, padding=1),
             nn.InstanceNorm3d(out_channels),
             nn.LeakyReLU(0.2),
             nn.Conv3d(out_channels, out_channels, 3, padding=1),
@@ -283,9 +278,21 @@ class DeconvBlock3D(nn.Module):
     def forward(self, x):
         return self.conv(x)
 
+class FinalDecoderBlock(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.conv = nn.Sequential(
+            nn.ConvTranspose3d(in_channels * 2, out_channels, 3, padding=1),
+            nn.InstanceNorm3d(out_channels),
+            nn.LeakyReLU(0.2)
+        )
+
+    def forward(self, x):
+        return self.conv(x)
+
 if __name__ == "__main__":
     # Parametri di test
-    batch_size = 4
+    batch_size = 1
     channels = 3
     depth = 20
     height = 256

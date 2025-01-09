@@ -19,7 +19,7 @@ pose_dataset:
   csv_path: ./dataset/position.csv
   resize_width: 256
   resize_height: 256
-  fps: 2
+  fps: 5
 
 train:
   save_path: "./models/"

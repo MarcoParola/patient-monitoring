@@ -25,12 +25,6 @@ def load_model(cfg):
             ),
             privacy_model_type=cfg.privacy_model_type
         )
-    if cfg.task == "privatizer":
-        from src.models.video_privatizer import VideoPrivatizer
-        model = VideoPrivatizer(
-            channels=cfg.in_channels, 
-            learning_rate=cfg.learning_rates.privatizer
-        )
     if cfg.task == "classification_privacy":
         from src.models.privacy_classifier import PrivacyClassifier
         model = PrivacyClassifier(

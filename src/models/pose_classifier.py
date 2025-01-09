@@ -2,6 +2,7 @@ import torch
 import pytorch_lightning as pl
 import torch.nn.functional as F
 from torch.optim import Adam
+from torchmetrics.functional import confusion_matrix
 from src.models.conv_backbone import CNN3DLightning
 from src.models.mlp import MLP
 
@@ -25,6 +26,12 @@ class PoseClassifier(pl.LightningModule):
 
         # Save the learning rate
         self.learning_rate = learning_rate
+
+        # Store predictions and labels for confusion matrix computation
+        self.val_predictions = []
+        self.val_labels = []
+        self.test_predictions = []
+        self.test_labels = []
 
     def forward(self, video_input):
         """
@@ -76,25 +83,73 @@ class PoseClassifier(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         """
-        Validation step logic.
-        Args:
-            batch (tuple): Validation batch data (inputs and labels).
-            batch_idx (int): Index of the current batch.
-        Returns:
-            dict: Loss and logits for the current batch.
+        Validation step logic with confusion matrix tracking.
         """
-        return self._common_step(batch, step_type="val")
+        result = self._common_step(batch, step_type="val")
+
+        # Collect predictions and labels for confusion matrix
+        video_input, labels = batch
+        preds = torch.argmax(result['logits'], dim=1)
+        self.val_predictions.append(preds)
+        self.val_labels.append(labels)
+
+        return result
+
+    def on_validation_epoch_end(self):
+        """
+        Hook executed at the end of each validation epoch to compute confusion matrix.
+        """
+        # Concatenate all predictions and labels
+        all_preds = torch.cat(self.val_predictions)
+        all_labels = torch.cat(self.val_labels)
+
+        # Compute confusion matrix
+        conf_matrix = confusion_matrix(
+            all_labels, all_preds, task="multiclass", num_classes=self.mlp.output_dim
+        )
+        print(f"\nValidation Confusion Matrix:\n{conf_matrix}")
+
+        # Optionally, log the confusion matrix to TensorBoard or a logger
+        self.log("val_conf_matrix", conf_matrix, prog_bar=True, on_step=True, on_epoch=True)
+
+        # Clear stored values for the next epoch
+        self.val_predictions.clear()
+        self.val_labels.clear()
 
     def test_step(self, batch, batch_idx):
         """
-        Test step logic.
-        Args:
-            batch (tuple): Test batch data (inputs and labels).
-            batch_idx (int): Index of the current batch.
-        Returns:
-            dict: Loss and logits for the current batch.
+        Test step logic with confusion matrix tracking.
         """
-        return self._common_step(batch, step_type="test")
+        result = self._common_step(batch, step_type="test")
+
+        # Collect predictions and labels for confusion matrix
+        video_input, labels = batch
+        preds = torch.argmax(result['logits'], dim=1)
+        self.test_predictions.append(preds)
+        self.test_labels.append(labels)
+
+        return result
+
+    def on_test_epoch_end(self):
+        """
+        Hook executed at the end of each test epoch to compute confusion matrix.
+        """
+        # Concatenate all predictions and labels
+        all_preds = torch.cat(self.test_predictions)
+        all_labels = torch.cat(self.test_labels)
+
+        # Compute confusion matrix
+        conf_matrix = confusion_matrix(
+            all_labels, all_preds, task="multiclass", num_classes=self.mlp.output_dim
+        )
+        print(f"\nTest Confusion Matrix:\n{conf_matrix}")
+
+        # Optionally, log the confusion matrix to TensorBoard or a logger
+        self.log("test_conf_matrix", conf_matrix, prog_bar=True, on_step=True, on_epoch=True)
+
+        # Clear stored values for the next epoch
+        self.test_predictions.clear()
+        self.test_labels.clear()
 
     def configure_optimizers(self):
         """
@@ -104,18 +159,6 @@ class PoseClassifier(pl.LightningModule):
         """
         optimizer = Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
-
-    def on_train_epoch_end(self):
-        """Hook executed at the end of each training epoch."""
-        print("\n** on_train_epoch_end **")
-
-    def on_validation_epoch_end(self):
-        """Hook executed at the end of each validation epoch."""
-        print("\n** on_validation_epoch_end **")
-
-    def on_test_epoch_end(self):
-        """Hook executed at the end of each test epoch."""
-        print("\n** on_test_epoch_end **")
 
     def compute_accuracy(self, preds, labels):
         """
@@ -130,6 +173,7 @@ class PoseClassifier(pl.LightningModule):
         correct = (predicted == labels).float().sum()  # Count correct predictions
         accuracy = correct / labels.size(0)  # Compute accuracy
         return accuracy
+
 
 if __name__ == "__main__":
     print("Test: PoseClassifier")
@@ -160,5 +204,31 @@ if __name__ == "__main__":
     # Test the test step
     test_loss = model.test_step(batch, batch_idx=0)
     print(f"Test loss: {test_loss['loss'].item()}")
+
+    # Compute and display the confusion matrix for test set
+    with torch.no_grad():
+        # Collect predictions and labels for confusion matrix
+        test_preds = []
+        test_labels = []
+
+        # Simulating multiple batches for confusion matrix computation
+        for _ in range(input_shape[0]):
+            video_input = torch.randn(input_shape)  # Random video input for testing
+            labels = torch.randint(0, num_classes, (input_shape[0],))  # Random labels
+            batch = (video_input, labels)
+
+            logits = model(video_input)
+            preds = torch.argmax(logits, dim=1)  # Get predicted class indices
+            test_preds.append(preds)
+            test_labels.append(labels)
+
+        # Concatenate predictions and labels
+        all_preds = torch.cat(test_preds)
+        all_labels = torch.cat(test_labels)
+
+        # Compute confusion matrix
+        conf_matrix = confusion_matrix(all_preds, all_labels, num_classes=num_classes, task="multiclass")
+        print("\nTest Confusion Matrix:")
+        print(conf_matrix)
 
     print("\nTest completed successfully!")
