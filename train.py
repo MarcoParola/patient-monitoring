@@ -46,7 +46,7 @@ def main(cfg):
     )
 
     hyper = OmegaConf.to_container(cfg, resolve=True)
-    hyperparameters =  dict(flatdict.FlatDict(hyper, delimiter="/"))
+    hyperparameters = dict(flatdict.FlatDict(hyper, delimiter="/"))
 
     wandb.config.update(hyperparameters)  # Salva tutta la configurazione su WandB
     wandb_logger = WandbLogger(log_model=True)  # Abilita il logging del modello
@@ -56,6 +56,7 @@ def main(cfg):
         accelerator=cfg.train.accelerator,
         devices=cfg.train.devices,
         max_epochs=cfg.train.max_epochs,
+        callbacks=model.configure_callbacks(),
         logger=wandb_logger
     )
 

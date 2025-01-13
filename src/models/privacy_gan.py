@@ -2,11 +2,12 @@ import torch
 import pytorch_lightning as pl
 from torch.optim import Adam
 import torch.nn.functional as F
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from src.models.pose_classifier import PoseClassifier
 from src.models.privacy_classifier import PrivacyClassifier
 
 class PrivacyGAN(pl.LightningModule):
-    def __init__(self, channels, output_dim_pose, output_dim_privacy, loss_weights, learning_rates, privacy_model_type="STYLEGAN2"):
+    def __init__(self, channels, output_dim_pose, output_dim_privacy, loss_weights, learning_rates, privacy_model_type="VIDEO_PRIVATIZER"):
         """
         Initialize PrivacyGAN.
         
@@ -141,7 +142,7 @@ class PrivacyGAN(pl.LightningModule):
         x, labels = batch
         
         # Forward pass
-        privatized_video, pose_pred, privacy_preds = self(x)
+        _, pose_pred, privacy_preds = self(x)
         
         # Calculate losses
         pose_loss = F.cross_entropy(pose_pred, labels[0])
@@ -180,7 +181,7 @@ class PrivacyGAN(pl.LightningModule):
         x, labels = batch
         
         # Forward pass
-        privatized_video, pose_pred, privacy_preds = self(x)
+        _, pose_pred, privacy_preds = self(x)
         
         # Calculate losses
         pose_loss = F.cross_entropy(pose_pred, labels[0])
@@ -228,3 +229,15 @@ class PrivacyGAN(pl.LightningModule):
         opt_pose = Adam(self.pose_classifier.parameters(), lr=self.lr_pose)
         opt_privacy = Adam(self.privacy_classifier.parameters(), lr=self.lr_privacy)
         return [opt_privatizer, opt_pose, opt_privacy]
+    
+    def configure_callbacks(self):
+        """
+        Configure early stopping callback.
+        """
+        early_stopping = EarlyStopping(
+            monitor="val_total_loss",
+            patience=5,
+            mode="min",
+            verbose=True
+        )
+        return [early_stopping]

@@ -9,44 +9,37 @@ model : null
 seed: -1
 
 in_channels: 3
-depth: 20
-width: 256
-height: 256
-output_dim : 9
 
 pose_dataset:
   path: ./dataset/position
   csv_path: ./dataset/position.csv
   resize_width: 256
   resize_height: 256
-  fps: 5
+  fps: 20
 
 train:
   save_path: "./models/"
-  batch_size: 2
-  max_epochs: 1
+  batch_size: 8
+  max_epochs: 100
   num_workers: 1
-  patient_ids: [123]
+  patient_ids: [123, 234]
   camera_type: 0
   accelerator: "cpu"
   devices: 1
   seed: -1
 
-learning_rates:
-  pose: 1e-4
-  privatizer: 1e-4
-  privacy: 1e-4
-
 val:
-  patient_ids: [234]
+  patient_ids: [345]
   camera_type: 0
 
 test:
   patient_ids: [345]
   camera_type: 0
 
-log:
-  path: "./logs/"
+learning_rates:
+  pose: 1e-5
+  privatizer: 1e-5
+  privacy: 1e-5
 
 hydra.run.dir: .
 hydra.output_subdir: ${hydra:runtime.cwd}/outputs/${now:%Y-%m-%d_%H-%M-%S}
