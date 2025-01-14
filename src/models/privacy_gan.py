@@ -2,7 +2,7 @@ import torch
 import pytorch_lightning as pl
 from torch.optim import Adam
 import torch.nn.functional as F
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from src.models.pose_classifier import PoseClassifier
 from src.models.privacy_classifier import PrivacyClassifier
 
@@ -232,12 +232,24 @@ class PrivacyGAN(pl.LightningModule):
     
     def configure_callbacks(self):
         """
-        Configure early stopping callback.
+        Configure early stopping and model checkpoint callbacks.
         """
+        # Early stopping callback
         early_stopping = EarlyStopping(
             monitor="val_total_loss",
-            patience=5,
+            patience=10,
             mode="min",
             verbose=True
         )
-        return [early_stopping]
+
+        # Model checkpoint callback
+        model_checkpoint = ModelCheckpoint(
+            monitor="val_total_loss",
+            dirpath="checkpoints/",
+            filename="best-model-{epoch:02d}-{val_total_loss:.4f}",
+            save_top_k=1,
+            mode="min",
+            verbose=True
+        )
+
+        return [early_stopping, model_checkpoint]

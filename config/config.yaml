@@ -24,8 +24,8 @@ train:
   num_workers: 1
   patient_ids: [123, 234]
   camera_type: 0
-  accelerator: "cpu"
-  devices: 1
+  accelerator: "gpu"
+  devices: [0]
   seed: -1
 
 val:
