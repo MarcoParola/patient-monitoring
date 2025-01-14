@@ -25,12 +25,15 @@ class PoseDatasetByPatients(Dataset):
 
         # Load the CSV and filter by patient_ids and camera_type
         self.data = pd.read_csv(csv_path, quotechar='"')  # Handle quoted strings properly
+        
         self.data = self.data[self.data['patient_id'].isin(patient_ids)]
-        if camera_type is not None:
+    
+        if camera_type is not "":
             self.data = self.data[self.data['camera_type'] == camera_type]
-
         # Convert the 'event' column from a JSON-like string to an actual Python object (list of dicts)
         self.data['event'] = self.data['event'].apply(lambda x: json.loads(x))
+        
+        
 
     def __len__(self):
         """

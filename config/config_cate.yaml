@@ -15,44 +15,43 @@ depth: 20
 width: 1920
 height: 1080
 output_dim : 9
-conv_backbone: 'YOLO'
 extract_keypoints: True
+conv_backbone: "YOLO"
 
 yolo:
-  freeze: True
-  model_size: "n"
+  model_size: "s"
 openpose:
-  detect_hands: False
-  detect_face: False
+  detect_hands: True
+  detect_face: True
 
 
 pose_dataset:
   path: dataset/position
   csv_path: dataset/position.csv
-  processed_csv: dataset/keypoints_YOLO.csv
-  resize_h: 256
-  resize_w: 256
-  fps: 3
+  processed_csv: dataset/keypoints/keypoints_YOLO_s_2_1.csv
+  resize_h: 480
+  resize_w: 640
+  fps: 2
 
 train:
   save_path: "./models/"
   batch_size: 1
   lr: 1e-5
-  max_epochs: 2
+  max_epochs: 5
   num_workers: 1
   patient_ids: [123]
-  camera_type: 0
+  camera_type: 1
   accelerator: "cpu"
   devices: 1
   seed: -1
 
 val:
-  patient_ids: [123]
-  camera_type: 0
+  patient_ids: [234]
+  camera_type: 1
 
 test:
-  patient_ids: [123]
-  camera_type: 0
+  patient_ids: [345]
+  camera_type: 1
 
 log:  
   path: "./logs/"

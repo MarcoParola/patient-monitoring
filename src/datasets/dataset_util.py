@@ -19,6 +19,8 @@ def load_dataset(cfg):
 
     if cfg.task == "classification":
         from src.datasets.pose.pose_dataset import PoseDatasetByPatients
+        print("CGF",cfg.train.camera_type)
+        print("CFG",cfg.test.camera_type)
 
         train = PoseDatasetByPatients(
             root=cfg.pose_dataset.path,

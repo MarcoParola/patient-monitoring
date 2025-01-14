@@ -24,11 +24,11 @@ class PoseDatasetKeypoints(Dataset):
         # Load the CSV and filter by patient_ids
         self.data = pd.read_csv(csv_path, quotechar='"')
         self.data = self.data[self.data['patient_id'].isin(patient_ids)]
-        if camera_type is not None:
+        if camera_type is not "":
             self.data = self.data[self.data['camera_type'] == camera_type]
         # Convert the 'event' column from a JSON-like string to an actual Python object (list of dicts)
         self.data['event'] = self.data['event'].apply(lambda x: json.loads(x))
-        print(self.data)
+        
 
     def __len__(self):
         """
@@ -46,7 +46,7 @@ class PoseDatasetKeypoints(Dataset):
 
         Returns:
             A tuple containing:
-                - video_tensor: the video data as a PyTorch tensor.
+                - keypoints_tensor: the keypoints data extracted as a PyTorch tensor.
                 - label: the body part as an integer label.
         """
         # Retrieve row from the filtered DataFrame
@@ -62,4 +62,5 @@ class PoseDatasetKeypoints(Dataset):
 
         # Convert label to numeric using the pose_map
         label = self.pose_map.get(label, -1)  # If label is not found, set it to -1
+        
         return keypoints_tensor, label
