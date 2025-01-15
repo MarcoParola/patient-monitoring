@@ -64,7 +64,7 @@ for CONFIG in "${OPENPOSE_CONFIGS[@]}"; do
 
     
       # Execute the Python script
-      python train2_cate.py
+      python train_cate.py
     done
   done
 done
@@ -92,7 +92,7 @@ for YOLO_MODEL_SIZE in "${YOLO_MODEL_SIZES[@]}"; do
 
     
       # Execute the Python script
-      python train2_cate.py
+      python train_cate.py
     done
   done
 done
@@ -115,7 +115,7 @@ for FPS in "${FPS_VALUES[@]}"; do
     sed -i "s/^  camera_type: .*/  camera_type: \"$CAMERA_TYPE\"/" "$CONFIG_FILE"
 
     # Execute the Python script for CNN trial
-    python train2_cate.py
+    python train_cate.py
   done
 done
 
