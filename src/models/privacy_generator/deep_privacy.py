@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from torch.optim import Adam
 
 class StyleGAN2Privatizer(pl.LightningModule):
-    def __init__(self, channels, style_dim=512, n_mlp=8, learning_rate=1e-4):
+    def __init__(self, channels, style_dim=512, n_mlp=8, learning_rate=1e-5):
         super().__init__()
         self.learning_rate = learning_rate
         self.channels = channels
@@ -107,7 +107,7 @@ class StyleGAN2Privatizer(pl.LightningModule):
         return Adam(self.parameters(), lr=self.learning_rate)
 
 class DeepPrivacy2Privatizer(pl.LightningModule):
-    def __init__(self, channels, learning_rate=1e-4):
+    def __init__(self, channels, learning_rate=1e-5):
         super().__init__()
         self.learning_rate = learning_rate
         

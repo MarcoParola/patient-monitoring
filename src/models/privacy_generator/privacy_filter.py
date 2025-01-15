@@ -8,12 +8,12 @@ class BasePrivacyFilter(pl.LightningModule):
     Base class for implementing privacy filters in video processing.
     Provides common functionality for training and evaluation.
     """
-    def __init__(self, learning_rate=1e-4):
+    def __init__(self, learning_rate=1e-5):
         """
         Initialize the base privacy filter.
         
         Args:
-            learning_rate (float): Learning rate for the optimizer. Defaults to 1e-4.
+            learning_rate (float): Learning rate for the optimizer. Defaults to 1e-5.
         """
         super(BasePrivacyFilter, self).__init__()
         self.learning_rate = learning_rate
@@ -88,14 +88,14 @@ class BlurPrivacyFilter(BasePrivacyFilter):
     """
     Privacy filter that applies a 3D blurring effect to videos using depthwise convolution.
     """
-    def __init__(self, channels, kernel_size=5, learning_rate=1e-4):
+    def __init__(self, channels, kernel_size=5, learning_rate=1e-5):
         """
         Initialize the blur privacy filter.
         
         Args:
             channels (int): Number of input video channels
             kernel_size (int): Size of the blur kernel. Defaults to 5
-            learning_rate (float): Learning rate for optimization. Defaults to 1e-4
+            learning_rate (float): Learning rate for optimization. Defaults to 1e-5
         """
         super(BlurPrivacyFilter, self).__init__(learning_rate)
         
@@ -135,13 +135,13 @@ class PixelatePrivacyFilter(BasePrivacyFilter):
     """
     Privacy filter that applies pixelation effect through downsampling and upsampling.
     """
-    def __init__(self, kernel_size=2, learning_rate=1e-4):
+    def __init__(self, kernel_size=2, learning_rate=1e-5):
         """
         Initialize the pixelation privacy filter.
         
         Args:
             kernel_size (int): Size of pooling kernel for downsampling. Defaults to 5
-            learning_rate (float): Learning rate for optimization. Defaults to 1e-4
+            learning_rate (float): Learning rate for optimization. Defaults to 1e-5
         """
         super(PixelatePrivacyFilter, self).__init__(learning_rate)
         self.kernel_size = kernel_size

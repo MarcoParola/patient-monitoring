@@ -115,6 +115,32 @@ class PrivacyClassifier(pl.LightningModule):
         self.val_labels_skin_color.clear()
         self.val_preds_gender.clear()
         self.val_labels_gender.clear()
+    
+    def compute_accuracy_multi_class(self, preds, labels):
+        """
+        Compute accuracy for multi-class predictions.
+        Args:
+            preds (Tensor): Logits predicted by the model for skin color.
+            labels (Tensor): Ground truth labels for skin color.
+        Returns:
+            Tensor: Accuracy score as a scalar tensor.
+        """
+        _, predicted = torch.max(preds, 1)  # Get predicted class
+        correct = (predicted == labels).float().sum()  # Count correct predictions
+        return correct / labels.size(0)
+
+    def compute_accuracy_binary(self, preds, labels):
+        """
+        Compute accuracy for binary predictions.
+        Args:
+            preds (Tensor): Logits predicted by the model for gender.
+            labels (Tensor): Ground truth binary labels for gender.
+        Returns:
+            Tensor: Accuracy score as a scalar tensor.
+        """
+        predicted = (torch.sigmoid(preds) > 0.5).float()  # Convert logits to binary predictions
+        correct = (predicted == labels).float().sum()  # Count correct predictions
+        return correct / labels.size(0)
 
 if __name__ == "__main__":
     print("Test: PrivacyClassifier")

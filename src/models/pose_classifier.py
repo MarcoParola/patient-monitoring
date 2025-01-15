@@ -21,6 +21,9 @@ class PoseClassifier(pl.LightningModule):
         # Convolutional backbone for feature extraction
         self.conv_backbone = CNN3DLightning(in_channels=channels)
 
+        # Output dimension for the final classification layer
+        self.output_dim = output_dim
+
         # Multi-Layer Perceptron (MLP) for final classification
         self.mlp = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim)
 
@@ -105,7 +108,7 @@ class PoseClassifier(pl.LightningModule):
 
         # Compute confusion matrix
         conf_matrix = confusion_matrix(
-            all_labels, all_preds, task="multiclass", num_classes=self.mlp.output_dim
+            all_labels, all_preds, task="multiclass", num_classes=self.output_dim
         )
         print(f"\nValidation Confusion Matrix:\n{conf_matrix}")
 
@@ -140,7 +143,7 @@ class PoseClassifier(pl.LightningModule):
 
         # Compute confusion matrix
         conf_matrix = confusion_matrix(
-            all_labels, all_preds, task="multiclass", num_classes=self.mlp.output_dim
+            all_labels, all_preds, task="multiclass", num_classes=self.output_dim
         )
         print(f"\nTest Confusion Matrix:\n{conf_matrix}")
 
