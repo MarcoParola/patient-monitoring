@@ -34,8 +34,7 @@ class PoseClassifier(pl.LightningModule):
 
     def forward(self, video_input):
         if (self.conv_backbone.__class__.__name__ == "CNN3DLightning"):
-            video_input = self.conv_backbone(video_input) 
-        print(video_input.shape)         
+            video_input = self.conv_backbone(video_input)          
         output = self.mlp(video_input)
         return output
 

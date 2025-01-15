@@ -32,7 +32,6 @@ def main(cfg):
     else:
         train, val, test = load_dataset_yolo(cfg)
     
-    print(train, val, test)
     # DataLoader per train, val e test
     train_loader = DataLoader(
         train, batch_size=cfg.train.batch_size, shuffle=False,

@@ -18,8 +18,6 @@ __pycache__/
 /lib64
 /include
 pyvenv.cfg
-requirements.txt
-
 *.log
 *.pth
 *.png

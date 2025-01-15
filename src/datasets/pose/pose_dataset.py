@@ -76,7 +76,7 @@ class PoseDatasetByPatients(Dataset):
         # Apply transformation if specified
         if self.transform:
             video_tensor = self.transform(video_tensor)
-        print(video_tensor.shape)
+        
         # Extract the label (body part) from the event
         if len(event) == 1 and 'body_part' in event[0]:
             label = event[0]['body_part']

@@ -24,7 +24,7 @@ class PoseDatasetKeypoints(Dataset):
         # Load the CSV and filter by patient_ids
         self.data = pd.read_csv(csv_path, quotechar='"')
         self.data = self.data[self.data['patient_id'].isin(patient_ids)]
-        if camera_type is not "":
+        if camera_type !="":
             self.data = self.data[self.data['camera_type'] == camera_type]
         # Convert the 'event' column from a JSON-like string to an actual Python object (list of dicts)
         self.data['event'] = self.data['event'].apply(lambda x: json.loads(x))

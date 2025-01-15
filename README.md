@@ -15,8 +15,14 @@ More information in the [official documentation](docs/README.md).
 # CATE - Training Experiments
 Download Openpose models from [My Drive](https://drive.google.com/drive/folders/14oba9QaCp1bcvDVtLpfqHLpuCUI8_od_?usp=sharing)
 
-Download Openpose release 1.6.0 form this [link](OPENPOSE_BINARIES_URL="https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases/download/v1.6.0/openpose-1.6.0-binaries-win64-only_cpu-flir-3d.zip"
-)
+Download Openpose release 1.6.0
+it should woek both with the GPU based version and the CPU one, the procedure is exactly the same buti tested it with the CPU based ones for hardware reasons
+
+Here is the CPU based one [link](https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases/download/v1.6.0/openpose-1.6.0-binaries-win64-only_cpu-flir-3d.zip)
+Here the GPU based one [link](https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases/download/v1.6.0/openpose-1.6.0-binaries-win64-gpu-flir-3d_recommended.zip)
+
+
+
 unzip the file and then place it inside src/models/skeleton
 
 -   remove the duplicate top folder 

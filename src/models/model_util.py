@@ -31,37 +31,57 @@ def load_dataset_openpose(cfg):
         # Load the CSV containing video information
         csv_path = cfg['pose_dataset']['csv_path']
         df = pd.read_csv(csv_path)
-    
+
+
         def preprocess_video(video_path, target_size=(224, 224), target_fps=30):
-                """
-                Preprocessa un video ridimensionandolo e regolando il numero di FPS.
-                
-                :param video_path: Percorso del video da preprocessare.
-                :param target_size: Dimensione desiderata dei frame (larghezza, altezza).
-                :param target_fps: Numero desiderato di FPS per il video preprocessato.
-                :return: Percorso del video preprocessato.
-                """
-                cap = cv2.VideoCapture(str(video_path))
-                original_fps = cap.get(cv2.CAP_PROP_FPS)
-                # Percorso del video preprocessato
-                preprocessed_video_path = video_path.parent / f"{video_path.stem}_preprocessed.mp4"
-                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                out = cv2.VideoWriter(str(preprocessed_video_path), fourcc, target_fps, target_size)
-                # Calcola l'intervallo di campionamento dei frame
-                frame_interval = round(original_fps / target_fps)
-                frame_idx = 0
-                while cap.isOpened():
-                    ret, frame = cap.read()
-                    if not ret:
+            """
+            Preprocessa un video ridimensionandolo e regolando il numero di FPS.
+            
+            :param video_path: Percorso del video da preprocessare.
+            :param target_size: Dimensione desiderata dei frame (larghezza, altezza).
+            :param target_fps: Numero desiderato di FPS per il video preprocessato.
+            :return: Percorso del video preprocessato.
+            """
+            cap = cv2.VideoCapture(str(video_path))
+            original_fps = cap.get(cv2.CAP_PROP_FPS)
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            duration = total_frames / original_fps
+            
+            # Percorso del video preprocessato
+            preprocessed_video_path = video_path.parent / f"{video_path.stem}_preprocessed.mp4"
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter(str(preprocessed_video_path), fourcc, target_fps, target_size)
+            
+            # Calcolo il numero totale di frame attesi
+            target_total_frames = int(duration * target_fps)
+            
+            
+            next_frame_time = 0  # Tempo del frame successivo da estrarre
+            frame_idx = 0
+            target_frame_idx = 0
+
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                current_time = frame_idx / original_fps
+                if current_time >= next_frame_time:
+                    resized_frame = cv2.resize(frame, target_size)
+                    out.write(resized_frame)
+                    target_frame_idx += 1
+                    next_frame_time += 1 / target_fps
+
+                    # Interrompo se raggiungo il numero desiderato di frame
+                    if target_frame_idx >= target_total_frames:
                         break
-                    # Scrive solo i frame a intervalli specificati
-                    if frame_idx % frame_interval == 0:
-                        resized_frame = cv2.resize(frame, target_size)
-                        out.write(resized_frame)
-                    frame_idx += 1
-                cap.release()
-                out.release()
-                return preprocessed_video_path
+                
+                frame_idx += 1
+    
+
+            cap.release()
+            out.release()
+            return preprocessed_video_path
         
         # Funzione per processare i dati (train, val, test)
         def process_data():
@@ -69,7 +89,7 @@ def load_dataset_openpose(cfg):
                 video_id = row['video_id']
                 patient_id = row['patient_id']
                 camera_type = row['camera_type']   
-                class_label = row['event']  # Class è direttamente la colonna "event"
+                class_label = row['event'] 
 
                 # Percorso del video originale
                 video_path = Path(cfg['pose_dataset']['path'], f"{video_id}.mp4").resolve()
@@ -80,9 +100,7 @@ def load_dataset_openpose(cfg):
                     target_size=(cfg['pose_dataset']['resize_w'], cfg['pose_dataset']['resize_h']),
                     target_fps=cfg['pose_dataset']['fps']
                 )
-
-                                
-                                # Processa il video intero con OpenPose
+                            # Processa il video intero con OpenPose
                 keypoints_data = OpenPoseAPI(video_path=preprocessed_video_path, detect_face=cfg['openpose']['detect_face'], detect_hands=cfg['openpose']['detect_hands']).keypoints
 
                 # Crea una lista vuota per accumulare i keypoints per ogni video
@@ -90,7 +108,7 @@ def load_dataset_openpose(cfg):
 
                 # Salva i dati per ogni frame
                 for frame_idx, keypoints in enumerate(keypoints_data):
-                    print(f"frame {frame_idx}, keypoints: {keypoints}")
+                    #print(f"frame {frame_idx}")
                     # Aggiungi i keypoints del frame alla lista flat_keypoints
                     flat_keypoints.extend(keypoints)  # Unisce i keypoints del frame al vettore piatto
 
@@ -102,13 +120,12 @@ def load_dataset_openpose(cfg):
                     'keypoints': flat_keypoints,  # Salva il vettore piatto dei keypoints
                     'event': class_label
                 })
-                print(processed_data)
+                
 
                 # Cancella il video preprocessato
                 if preprocessed_video_path.exists():
                     os.remove(preprocessed_video_path)
-
-                return processed_data
+            return processed_data
 
 
         if(cfg.extract_keypoints and cfg.conv_backbone == "OpenPose"):

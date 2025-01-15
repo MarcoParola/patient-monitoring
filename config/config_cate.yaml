@@ -15,11 +15,11 @@ depth: 20
 width: 1920
 height: 1080
 output_dim : 9
-extract_keypoints: True
-conv_backbone: "YOLO"
+extract_keypoints: True 
+conv_backbone: "OpenPose"
 
 yolo:
-  model_size: "s"
+  model_size: "n"
 openpose:
   detect_hands: True
   detect_face: True
@@ -28,7 +28,7 @@ openpose:
 pose_dataset:
   path: dataset/position
   csv_path: dataset/position.csv
-  processed_csv: dataset/keypoints/keypoints_YOLO_s_2_1.csv
+  processed_csv: dataset/keypoints/keypoints_OpenPose_True_True_2_1.csv
   resize_h: 480
   resize_w: 640
   fps: 2
