@@ -20,7 +20,7 @@ VENV_DIR="C:\Users\cater\anaconda3\envs\venv"
 
 # FPS and camera type combinations
 FPS_VALUES=(1 2 3)
-CAMERA_TYPES=(0 1 "")
+CAMERA_TYPES=(0 1 2)
 
 # Create and activate a virtual environment
 if [ ! -d "$VENV_DIR" ]; then
@@ -70,7 +70,7 @@ for CONFIG in "${OPENPOSE_CONFIGS[@]}"; do
 done
 
 
-Iterate over YOLO model sizes
+#Iterate over YOLO model sizes
 for YOLO_MODEL_SIZE in "${YOLO_MODEL_SIZES[@]}"; do
   
   for FPS in "${FPS_VALUES[@]}"; do
@@ -112,7 +112,7 @@ for FPS in "${FPS_VALUES[@]}"; do
     sed -i "s/^  resize_h: .*/  resize_h: $CNN_RESIZE_H/" "$CONFIG_FILE"
     sed -i "s|^  processed_csv: .*|  processed_csv: dataset/keypoints/keypoints_CNN_${FPS}_${CAMERA_TYPE}.csv|" "$CONFIG_FILE"
     sed -i "s/^  fps: .*/  fps: $FPS/" "$CONFIG_FILE"
-    sed -i "s/^  camera_type: .*/  camera_type: \"$CAMERA_TYPE\"/" "$CONFIG_FILE"
+    sed -i "s/^  camera_type: .*/  camera_type: $CAMERA_TYPE/" "$CONFIG_FILE"
 
     # Execute the Python script for CNN trial
     python train_cate.py

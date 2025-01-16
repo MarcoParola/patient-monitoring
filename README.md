@@ -13,6 +13,7 @@ More information in the [official documentation](docs/README.md).
 
 
 # CATE - Training Experiments
+## Openpose
 Download Openpose models from [My Drive](https://drive.google.com/drive/folders/14oba9QaCp1bcvDVtLpfqHLpuCUI8_od_?usp=sharing)
 
 Download Openpose release 1.6.0
@@ -20,7 +21,6 @@ it should woek both with the GPU based version and the CPU one, the procedure is
 
 Here is the CPU based one [link](https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases/download/v1.6.0/openpose-1.6.0-binaries-win64-only_cpu-flir-3d.zip)
 Here the GPU based one [link](https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases/download/v1.6.0/openpose-1.6.0-binaries-win64-gpu-flir-3d_recommended.zip)
-
 
 
 unzip the file and then place it inside src/models/skeleton
@@ -33,6 +33,12 @@ unzip the file and then place it inside src/models/skeleton
     -   pose_iter_116000.caffemodel into models/face
 -   create a folder output/output_jsons inside openpose main folder
 -   in skeleton fonder move openpose_skeleton.py inside the openpose main folder 
+
+
+## YOLO
+Download YOLO Pose models from this [link](https://docs.ultralytics.com/tasks/pose/#models) and place them in the src/models/skeleton/yolo folder
+
+## To run all tests 
 In bash_cate.sh line 21 modify the path to the path to your anaconda venv
 
 execute bash_cate.sh
