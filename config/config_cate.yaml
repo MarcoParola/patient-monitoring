@@ -28,10 +28,10 @@ openpose:
 pose_dataset:
   path: dataset/position
   csv_path: dataset/position.csv
-  processed_csv: dataset/keypoints/keypoints_CNN_3_2.csv
+  processed_csv: dataset/keypoints/keypoints_CNN_1_2.csv
   resize_h: 256
   resize_w: 256
-  fps: 3
+  fps: 1
 
 train:
   save_path: "./models/"
