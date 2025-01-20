@@ -6,6 +6,7 @@ from torch.optim import Adam
 from src.models.conv_backbone import CNN3DLightning
 from src.models.skeleton.openpose.openpose_skeleton import OpenPoseAPI
 from src.models.mlp import MLP
+from src.models.LSTM import LSTM
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
@@ -15,7 +16,7 @@ import os
 from PIL import Image as PILImage
 
 class PoseClassifier(pl.LightningModule):
-    def __init__(self, input_shape=(1, 3, 20, 640, 480), output_dim=9, backbone="CNN3D", detect_face=False, detect_hands=False, fps=1):
+    def __init__(self, input_shape=(1, 3, 20, 640, 480), output_dim=9, backbone="CNN3D", end = "mlp", detect_face=False, detect_hands=False, fps=1):
         super(PoseClassifier, self).__init__()
         self.conv_backbone = None
         if (backbone == "YOLO"):
@@ -28,7 +29,11 @@ class PoseClassifier(pl.LightningModule):
             self.feature_dim = self.conv_backbone.feature_dim
 
         # MLP for final classification
-        self.mlp = MLP(input_dim=self.feature_dim, output_dim=output_dim)
+        if(end == "mlp"):
+            self.mlp = MLP(input_dim=self.feature_dim, output_dim=output_dim)
+        else:
+            self.lstm = LSTM(input_size=self.feature_dim, output_size=output_dim)
+
         self.test_outputs = [] 
         self.val_outputs = []
         self.output_dim = output_dim
