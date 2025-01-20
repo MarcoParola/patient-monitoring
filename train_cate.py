@@ -63,10 +63,9 @@ def main(cfg):
 
     # Configurazione EarlyStopping
     early_stop_callback = EarlyStopping(
-        monitor='val_loss',  # Monitor il valore di loss di validazione
-        patience=50,         # Imposta la patience a 50
-        verbose=True,      # Mostra i dettagli nel caso di early stopping
-        check_on_train_epoch_end=False
+        monitor='val_loss', 
+        patience=15,         
+        verbose=True    
     )
 
 
