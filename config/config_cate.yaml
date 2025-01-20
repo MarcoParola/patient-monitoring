@@ -16,22 +16,22 @@ width: 1920
 height: 1080
 output_dim : 9
 extract_keypoints: True 
-conv_backbone: "OpenPose"
+conv_backbone: "CNN3D"
 
 yolo:
-  model_size: "n"
+  model_size: "m"
 openpose:
-  detect_hands: True
+  detect_hands: False
   detect_face: True
 
 
 pose_dataset:
   path: dataset/position
   csv_path: dataset/position.csv
-  processed_csv: dataset/keypoints/keypoints_OpenPose_True_True_2_1.csv
-  resize_h: 480
-  resize_w: 640
-  fps: 2
+  processed_csv: dataset/keypoints/keypoints_CNN_3_2.csv
+  resize_h: 256
+  resize_w: 256
+  fps: 3
 
 train:
   save_path: "./models/"
@@ -40,18 +40,18 @@ train:
   max_epochs: 5
   num_workers: 1
   patient_ids: [123]
-  camera_type: 1
+  camera_type: 2
   accelerator: "cpu"
   devices: 1
   seed: -1
 
 val:
   patient_ids: [234]
-  camera_type: 1
+  camera_type: 2
 
 test:
   patient_ids: [345]
-  camera_type: 1
+  camera_type: 2
 
 log:  
   path: "./logs/"
