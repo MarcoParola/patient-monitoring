@@ -31,21 +31,22 @@ class CNN3DLightning(pl.LightningModule):
         self.feature_extractor = nn.Linear(self.feature_dim, 256)
 
     def forward(self, x):
-        x = self.pool1(x)
         x = F.relu(self.conv1(x))
+        x = self.pool1(x)
         x = self.dropout(x)
-        x = self.pool2(x)
         x = F.relu(self.conv2(x))
+        x = self.pool2(x)
         x = self.dropout(x)
-        x = self.pool3(x)
         x = F.relu(self.conv3(x))
+        x = self.pool3(x)
         x = self.dropout(x)
-        x = self.pool4(x)
         x = F.relu(self.conv4(x))
+        x = self.pool4(x)
         x = self.dropout(x)
         x = self.flatten(x)
         x = self.feature_extractor(x)
         return x
+
 
     def training_step(self, batch, batch_idx):
         x, y = batch
