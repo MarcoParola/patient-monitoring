@@ -1,4 +1,3 @@
-from datetime import datetime
 import os
 import json
 from collections import Counter
@@ -30,6 +29,8 @@ def calculate_statistics(base_folder):
         "environment_event_count": 0,
         "pathology_counts": Counter(),
         "skin_color_counts": Counter(),
+        "gender_counts": Counter(),
+        "age_distribution": [],
     }
     
     # List of patient directories
@@ -48,9 +49,19 @@ def calculate_statistics(base_folder):
                 stats["average_glasgow"].append(mean(session_data["glasgow"]))
             stats["room_type_counts"][session_data.get("room_type", "Unknown")] += 1
             stats["pathology_counts"][session_data.get("pathology", "Unknown")] += 1
+            
             # Add skin color to statistics
             skin_color = session_data.get("skin_color", "Unknown")
             stats["skin_color_counts"][skin_color] += 1
+            
+            # Add gender to statistics
+            gender = session_data.get("gender", "Unknown")
+            stats["gender_counts"][gender] += 1
+            
+            # Add age to statistics
+            age = session_data.get("age")
+            if age is not None:
+                stats["age_distribution"].append(age)
         
         # Read events.json
         events_data = load_json(events_file)
@@ -96,3 +107,5 @@ if __name__ == "__main__":
     print(f"Verbal event count: {statistics['verbal_event_count']}")
     print(f"Environmental event count: {statistics['environment_event_count']}")
     print(f"Skin color distribution: {dict(statistics['skin_color_counts'])}")
+    print(f"Gender distribution: {dict(statistics['gender_counts'])}")
+    print(f"Age distribution: {statistics['age_distribution']}")
