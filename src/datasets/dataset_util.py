@@ -17,7 +17,7 @@ def load_dataset(cfg):
     # Initialize datasets
     train, val, test = None, None, None
 
-    if cfg.task == "classification":
+    if cfg.task == "classification" and cfg.dataset == "pose":
         from src.datasets.pose.pose_dataset import PoseDatasetByPatients
 
         train = PoseDatasetByPatients(
@@ -45,7 +45,7 @@ def load_dataset(cfg):
             pose_map=cfg.pose_map
         )
 
-    elif cfg.task == "privacy" or cfg.task == "classification_privacy" or cfg.task == "privatizer":
+    elif (cfg.task == "privacy" or cfg.task == "classification_privacy" or cfg.task == "privatizer") and cfg.dataset == "pose":
         from src.datasets.pose.pose_dataset import PoseDatasetByPatientsPrivacy
 
         train = PoseDatasetByPatientsPrivacy(
@@ -78,6 +78,28 @@ def load_dataset(cfg):
             pose_map=cfg.pose_map,
             privacy_map=cfg.privacy_map
         )
+
+    elif cfg.dataset == "action":
+        from torch.utils.data import random_split
+        from src.datasets.action.hmdb_dataset import HMDBDatasetPrivacy
+
+        torch.manual_seed(42)
+
+        # Crea il dataset
+        dataset = HMDBDatasetPrivacy(
+            root=cfg.pose_dataset.path,
+            csv_path=cfg.pose_dataset.csv_path,
+            transform=test_transform,
+            action_map=cfg.pose_map
+        )
+
+        dataset_size = len(dataset)
+        train_size = int(0.7 * dataset_size)
+        val_size = int(0.2 * dataset_size)
+        test_size = dataset_size - train_size - val_size
+
+        # Dividi il dataset in modo riproducibile
+        train, val, test = random_split(dataset, [train_size, val_size, test_size])
 
     return train, val, test
 

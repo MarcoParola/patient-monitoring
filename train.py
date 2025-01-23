@@ -56,7 +56,7 @@ def main(cfg):
         accelerator=cfg.train.accelerator,
         devices=cfg.train.devices,
         max_epochs=cfg.train.max_epochs,
-        callbacks=model.configure_callbacks(),
+        callbacks=model.configure_callbacks(cfg.train.early_stopping, cfg.train.patience),
         logger=wandb_logger
     )
 

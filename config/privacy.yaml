@@ -15,6 +15,6 @@ privacy_model_type: "VIDEO_PRIVATIZER"
 
 loss_weights:
   alpha: 1.0
-  beta: 0.5
+  beta: 0.3
 
 path_privacy: "./data/"

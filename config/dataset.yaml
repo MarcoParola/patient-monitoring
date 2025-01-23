@@ -1,3 +1,12 @@
+dataset: "action"
+
+pose_dataset:
+  path: ./dataset/position
+  csv_path: ./dataset/position.csv
+  resize_width: 256
+  resize_height: 256
+  fps: 5
+
 pose_map:
   Arm_Left: 0
   Arm_Right: 1
@@ -8,5 +17,33 @@ pose_map:
   Foot_Left: 6
   Foot_Right: 7
   Head: 8
+
+action_dataset:
+  path: ./dataset/hmdb51
+  csv_path: ./dataset/hmdb51/video_metadata.csv
+  resize_width: 256
+  resize_height: 256
+  fps: 5
+
+action_map:
+  cartwheel: 0
+  clap: 1
+  climb: 2
+  climb_stairs: 3
+  dive: 4
+  fall_floor: 5
+  flic_flac: 6
+  handstand: 7
+  jump: 8
+  pullup: 9
+  pushup: 10
+  run: 11
+  sit: 12
+  situp: 13
+  somersault: 14
+  stand up: 15
+  turn: 16
+  walk: 17
+  wave: 18
 
 output_dim : 9

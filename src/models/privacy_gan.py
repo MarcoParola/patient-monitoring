@@ -310,16 +310,27 @@ class PrivacyGAN(pl.LightningModule):
         opt_privacy = Adam(self.privacy_classifier.parameters(), lr=self.lr_privacy)
         return [opt_privatizer, opt_pose, opt_privacy]
     
-    def configure_callbacks(self):
+    def configure_callbacks(self, enable_early_stopping=True, patience=10):
         """
-        Configure early stopping and model checkpoint callbacks.
-        """
-        # Early stopping callback
-        early_stopping = EarlyStopping(
-            monitor="val_total_loss",
-            patience=10,
-            mode="min",
-            verbose=True
-        )
+        Configure callbacks for early stopping and model saving.
 
-        return [early_stopping]
+        Args:
+            enable_early_stopping (bool): Flag to enable or disable early stopping.
+            patience (int): Number of epochs without improvement before stopping training.
+
+        Returns:
+            list: List of configured callbacks.
+        """
+        callbacks = []
+
+        if enable_early_stopping:
+            early_stopping = EarlyStopping(
+                monitor="val_total_loss",  # 
+                patience=patience,         # 
+                mode="min",                # 
+                verbose=True
+            )
+            callbacks.append(early_stopping)
+
+        return callbacks
+

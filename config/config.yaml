@@ -10,22 +10,17 @@ seed: -1
 
 in_channels: 3
 
-pose_dataset:
-  path: ./dataset/position
-  csv_path: ./dataset/position.csv
-  resize_width: 256
-  resize_height: 256
-  fps: 20
-
 train:
   save_path: "./models/"
   batch_size: 8
-  max_epochs: 100
+  max_epochs: 30
   num_workers: 1
   patient_ids: [123, 234]
   camera_type: 0
   accelerator: "gpu"
   devices: [0]
+  early_stopping: False
+  patience: 10
   seed: -1
 
 val:
