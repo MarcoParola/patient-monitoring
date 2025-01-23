@@ -54,7 +54,7 @@ class HMDBDatasetPrivacy(Dataset):
         age = row['age']
 
         # Construct the path to the video file
-        video_path = os.path.join(self.root, f"{video_id}.mp4")
+        video_path = os.path.join(self.root, f"{video_id}.avi")
 
         # Check if the video file exists
         if not os.path.exists(video_path):
@@ -74,7 +74,5 @@ class HMDBDatasetPrivacy(Dataset):
         label = self.action_map[action]
 
         labels = (label, skin_color, float(gender), float(age))
-
-        print(labels)
 
         return video_tensor, labels

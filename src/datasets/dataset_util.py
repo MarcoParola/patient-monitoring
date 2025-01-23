@@ -87,10 +87,10 @@ def load_dataset(cfg):
 
         # Crea il dataset
         dataset = HMDBDatasetPrivacy(
-            root=cfg.pose_dataset.path,
-            csv_path=cfg.pose_dataset.csv_path,
+            root=cfg.action_dataset.path,
+            csv_path=cfg.action_dataset.csv_path,
             transform=test_transform,
-            action_map=cfg.pose_map
+            action_map=cfg.action_map
         )
 
         dataset_size = len(dataset)

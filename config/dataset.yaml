@@ -41,9 +41,9 @@ action_map:
   sit: 12
   situp: 13
   somersault: 14
-  stand up: 15
+  stand: 15
   turn: 16
   walk: 17
   wave: 18
 
-output_dim : 9
+output_dim : 19
