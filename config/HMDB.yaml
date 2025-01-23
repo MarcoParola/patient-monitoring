@@ -1,0 +1,20 @@
+action_map:
+  cartwheel: 1
+  clap: 2
+  climb: 3
+  climb_stairs: 4
+  dive: 5
+  fall_floor: 6
+  flic_flac: 7
+  handstand: 8
+  jump: 9
+  pullup: 10
+  pushup: 11
+  run: 12
+  sit: 13
+  situp: 14
+  somersault: 15
+  stand up: 16
+  turn: 17
+  walk: 18
+  wave: 19
