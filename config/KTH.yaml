@@ -1,0 +1,7 @@
+KTH_actions:
+  boxing: 0
+  handclapping: 1
+  handwaving: 2
+  jogging: 3
+  running: 5
+  walking: 6

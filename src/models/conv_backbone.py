@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 import torch.nn.functional as F
 
 class CNN3DLightning(pl.LightningModule):
-    def __init__(self, in_channels=3, learning_rate=1e-3):
+    def __init__(self, in_channels=3, learning_rate=1e-4):
         super(CNN3DLightning, self).__init__()
         self.learning_rate = learning_rate
         

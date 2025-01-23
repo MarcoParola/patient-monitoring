@@ -8,7 +8,7 @@ from pytorch_lightning.loggers import WandbLogger
 import wandb
 import flatdict
 from omegaconf import OmegaConf
-from src.models.model_util import load_model, load_dataset_openpose, load_dataset_yolo
+from src.models.model_util import *
 from src.datasets.dataset_util import *
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
@@ -28,11 +28,17 @@ def main(cfg):
     if cfg.conv_backbone == "OpenPose":
         train, val, test = load_dataset_openpose(cfg)
     elif cfg.conv_backbone == "CNN3D":
-        train, val, test = load_dataset(cfg)
+       
+        if cfg.dataset== "HMDB":
+            train, val, test = load_HMDB(cfg)
+        elif cfg.dataset == "KTH":
+            train, val, test = load_KTH(cfg)
+        else:
+            train, val, test = load_dataset(cfg)
     else:
         train, val, test = load_dataset_yolo(cfg)
     
-    print(train.__len__(), test.__len__(), val.__len__())
+    
     # DataLoader per train, val e test
     train_loader = DataLoader(
         train, batch_size=cfg.train.batch_size, shuffle=False,
@@ -67,7 +73,6 @@ def main(cfg):
         patience=15,         
         verbose=True    
     )
-
 
     # Configurazione del trainer
     trainer = pl.Trainer(

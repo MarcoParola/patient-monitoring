@@ -29,9 +29,10 @@ class PoseClassifier(pl.LightningModule):
             self.feature_dim = self.conv_backbone.feature_dim
 
         # MLP for final classification
-        if(end == "mlp"):
+        
+        if (end == "mlp"):
             self.mlp = MLP(input_dim=self.feature_dim, output_dim=output_dim)
-        else:
+        elif (end == "lstm"):   
             self.lstm = LSTM(input_size=self.feature_dim, output_size=output_dim)
 
         self.test_outputs = [] 
