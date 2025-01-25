@@ -1,0 +1,5 @@
+python train.py dataset="action" privacy_model_type="VIDEO_PRIVATIZER" pose_dataset.fps=5 privacy_attributes.skin_color=3 output_dim=19
+python train.py dataset="action" privacy_model_type="PIXELATE" pose_dataset.fps=5 privacy_attributes.skin_color=3 output_dim=19
+python train.py dataset="action" privacy_model_type="BLUR" pose_dataset.fps=5 privacy_attributes.skin_color=3 output_dim=19
+python train.py dataset="action" privacy_model_type="DEEP_PRIVACY2" pose_dataset.fps=5 privacy_attributes=3 output_dim=19
+python train.py dataset="action" privacy_model_type="STYLEGAN2" pose_dataset.fps=5 privacy_attributes.skin_color=3 output_dim=19

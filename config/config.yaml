@@ -20,7 +20,7 @@ train:
   accelerator: "gpu"
   devices: [0]
   early_stopping: False
-  patience: 10
+  patience: 30
   seed: -1
 
 val:

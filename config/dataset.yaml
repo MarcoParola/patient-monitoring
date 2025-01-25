@@ -1,4 +1,4 @@
-dataset: "action"
+dataset: "pose"
 
 pose_dataset:
   path: ./dataset/position
@@ -46,4 +46,4 @@ action_map:
   walk: 17
   wave: 18
 
-output_dim : 19
+output_dim : 9
