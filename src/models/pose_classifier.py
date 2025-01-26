@@ -25,7 +25,7 @@ class PoseClassifier(pl.LightningModule):
         self.output_dim = output_dim
 
         # Multi-Layer Perceptron (MLP) for final classification
-        self.mlp = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim)
+        self.mlp = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim, task_type='multiclass_classification')
 
         # Save the learning rate
         self.learning_rate = learning_rate
@@ -112,9 +112,6 @@ class PoseClassifier(pl.LightningModule):
         )
         print(f"\nValidation Confusion Matrix:\n{conf_matrix}")
 
-        # Optionally, log the confusion matrix to TensorBoard or a logger
-        self.log("val_conf_matrix", conf_matrix, prog_bar=True, on_step=True, on_epoch=True)
-
         # Clear stored values for the next epoch
         self.val_predictions.clear()
         self.val_labels.clear()
@@ -146,9 +143,6 @@ class PoseClassifier(pl.LightningModule):
             all_labels, all_preds, task="multiclass", num_classes=self.output_dim
         )
         print(f"\nTest Confusion Matrix:\n{conf_matrix}")
-
-        # Optionally, log the confusion matrix to TensorBoard or a logger
-        self.log("test_conf_matrix", conf_matrix, prog_bar=True, on_step=True, on_epoch=True)
 
         # Clear stored values for the next epoch
         self.test_predictions.clear()

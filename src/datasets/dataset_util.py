@@ -79,17 +79,35 @@ def load_dataset(cfg):
             privacy_map=cfg.privacy_map
         )
 
-    elif cfg.dataset == "action":
+    elif cfg.task == "classification" and cfg.dataset == "action":
+        from torch.utils.data import random_split
+        from src.datasets.action.hmdb_dataset import HMDBDataset
+
+        # Crea il dataset
+        dataset = HMDBDataset(
+            root=cfg.action_dataset.path,
+            csv_path=cfg.action_dataset.csv_path,
+            transform=train_transform,
+            action_map=cfg.action_map
+        )
+
+        dataset_size = len(dataset)
+        train_size = int(0.7 * dataset_size)
+        val_size = int(0.2 * dataset_size)
+        test_size = dataset_size - train_size - val_size
+
+        # Dividi il dataset in modo riproducibile
+        train, val, test = random_split(dataset, [train_size, val_size, test_size])
+
+    elif (cfg.task == "privacy" or cfg.task == "classification_privacy" or cfg.task == "privatizer") and cfg.dataset == "action":
         from torch.utils.data import random_split
         from src.datasets.action.hmdb_dataset import HMDBDatasetPrivacy
-
-        torch.manual_seed(42)
 
         # Crea il dataset
         dataset = HMDBDatasetPrivacy(
             root=cfg.action_dataset.path,
             csv_path=cfg.action_dataset.csv_path,
-            transform=test_transform,
+            transform=train_transform,
             action_map=cfg.action_map
         )
 
