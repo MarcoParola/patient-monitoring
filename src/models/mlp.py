@@ -11,10 +11,9 @@ class MLP(pl.LightningModule):
         self.fc = nn.Linear(input_dim, 256)
         self.dropout = nn.Dropout(p=0.4)
         self.output = nn.Linear(256, output_dim)
-        self.activation = nn.GELU()
 
     def forward(self, x):
-        x = self.activation(self.fc(x))
+        x = self.fc(x)
         x = self.dropout(x)
         output = self.output(x)
         return output
