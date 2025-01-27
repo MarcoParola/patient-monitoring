@@ -2,6 +2,7 @@ import os
 import json
 import pandas as pd
 import torch
+import ast
 from PIL import Image
 from torch.utils.data import Dataset
 import torchvision.io
@@ -28,7 +29,9 @@ class PoseDatasetKeypoints(Dataset):
             self.data = self.data[self.data['camera_type'] == camera_type]
         # Convert the 'event' column from a JSON-like string to an actual Python object (list of dicts)
         self.data['event'] = self.data['event'].apply(lambda x: json.loads(x))
-        
+         # Parse the 'keypoints' column from the string representation of a tensor to an actual PyTorch tensor
+
+
 
     def __len__(self):
         """
@@ -51,16 +54,21 @@ class PoseDatasetKeypoints(Dataset):
         """
         # Retrieve row from the filtered DataFrame
         row = self.data.iloc[index]
-        keypoints = eval(row["keypoints"]) # Convert the string to a Python list
-        keypoints_tensor = torch.tensor(keypoints)  # Convert to a PyTorch tensor
+        keypoints = row["keypoints"]
+        numeric_list = [float(x) for x in keypoints.strip('[]').split(',')]
+        # Converte la lista in un tensore
+        keypoints_tensor = torch.tensor(numeric_list)
+
+         # Convert the string to a Python list
+         # Convert to a PyTorch tensor
         # Extract the label (body part) from the event
         event = row['event']
         if len(event) == 1 and 'body_part' in event[0]:
             label = event[0]['body_part']
         else:
             raise ValueError(f"Invalid event format: {event}")
-
+        
         # Convert label to numeric using the pose_map
         label = self.pose_map.get(label, -1)  # If label is not found, set it to -1
-        
         return keypoints_tensor, label
+    

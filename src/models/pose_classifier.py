@@ -45,7 +45,12 @@ class PoseClassifier(pl.LightningModule):
 
     def forward(self, video_input):
         if (self.conv_backbone.__class__.__name__ == "CNN3DLightning"):
-            video_input = self.conv_backbone(video_input)          
+            video_input = self.conv_backbone(video_input)     
+        elif (self.conv_backbone.__class__.__name__ != "OpenPoseAPI"):
+            print("entro")
+            video_input = video_input.flatten()
+            print(video_input.shape)
+         
         output = self.mlp(video_input)
         return output
 
@@ -53,6 +58,8 @@ class PoseClassifier(pl.LightningModule):
         video_input, labels = batch
         # Prediction
         pred = self(video_input)
+        if pred.size(0) == 9:  # Dimensione pred per singolo esempio
+            pred = pred.unsqueeze(0)  
         loss = F.cross_entropy(pred, labels)
 
         # Log metrics with WandB
