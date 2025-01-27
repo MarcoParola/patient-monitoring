@@ -1,7 +1,7 @@
 defaults:
   - _self_
   - dataset
-  
+  - KTH
 wandb:
   entity: "c-bruchi-university-of-pisa"
   project: "pat-mon"
@@ -17,21 +17,32 @@ height: 1080
 output_dim : 9
 extract_keypoints: True 
 conv_backbone: "CNN3D"
+end: "mlp"
+dataset: "Custom"
+
 
 yolo:
   model_size: "m"
 openpose:
   detect_hands: False
-  detect_face: True
+  detect_face: False
 
 
 pose_dataset:
   path: dataset/position
   csv_path: dataset/position.csv
-  processed_csv: dataset/keypoints/keypoints_CNN_1_2.csv
+  processed_csv: dataset/position_OP_body.csv
   resize_h: 256
   resize_w: 256
-  fps: 1
+  fps: 3
+
+
+KTH_dataset:
+  path: dataset/KTH
+  csv_path: dataset/KTH.csv
+  resize_h: 256
+  resize_w: 256
+  fps: 3
 
 train:
   save_path: "./models/"
@@ -39,19 +50,20 @@ train:
   lr: 1e-5
   max_epochs: 5
   num_workers: 1
-  patient_ids: [123]
-  camera_type: 2
+  patient_ids: [123,234]
+  camera_type: 0
   accelerator: "cpu"
   devices: 1
   seed: -1
+  patience: 15
 
 val:
-  patient_ids: [234]
-  camera_type: 2
+  patient_ids: [345]
+  camera_type: 0
 
 test:
   patient_ids: [345]
-  camera_type: 2
+  camera_type: 0
 
 log:  
   path: "./logs/"
