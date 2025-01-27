@@ -45,6 +45,6 @@ for FPS in "${FPS_VALUES[@]}"; do
     fi
 
     # Execute the Python script for CNN trial
-    #python train_cate.py
+    python train_cate.py
   done
 done
