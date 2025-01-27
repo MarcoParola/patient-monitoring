@@ -209,7 +209,7 @@ def load_dataset_yolo(cfg):
                     
                     # Concatenazione diretta dei keypoint
                     video_keypoints.extend(keypoints.flatten().tolist())
-                    print(len(video_keypoints))
+                    
                     
                     # Debug opzionale per verificare le dimensioni
                     #print(f"Frame {frame_idx}: Keypoints Shape: {keypoints.shape}, Total Keypoints Shape: {pd.DataFrame(video_keypoints).shape}")
