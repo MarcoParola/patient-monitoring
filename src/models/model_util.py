@@ -208,7 +208,7 @@ def load_dataset_yolo(cfg):
                     keypoints = yolo_pose_api(preprocessed_frame.unsqueeze(0))  # Passa il frame alla rete YOLOPoseAPI
                     
                     # Concatenazione diretta dei keypoint
-                    video_keypoints.extend(keypoints.numpy().flatten().tolist())
+                    video_keypoints.extend(keypoints.flatten().tolist())
                     print(len(video_keypoints))
                     
                     # Debug opzionale per verificare le dimensioni
