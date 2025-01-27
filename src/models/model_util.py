@@ -190,6 +190,8 @@ def load_dataset_yolo(cfg):
                 video, _, metadata = torchvision.io.read_video(str(video_path), pts_unit="sec")
                 video = video.permute(3, 0, 1, 2)  # Cambia la forma in (C, T, H, W)
                 original_fps = metadata['video_fps']
+                max_frames = int(5 * original_fps)
+                video = video[:, :max_frames] if video.shape[1] > max_frames else video
 
                 # Preprocessa il video (ridimensiona e regola FPS)
                 transform = T.Compose([
@@ -206,13 +208,13 @@ def load_dataset_yolo(cfg):
                     
                     # Estrai i keypoint dal frame preprocessato
                     keypoints = yolo_pose_api(preprocessed_frame.unsqueeze(0))  # Passa il frame alla rete YOLOPoseAPI
-                    
+                    print(keypoints.size())
                     # Concatenazione diretta dei keypoint
                     video_keypoints.extend(keypoints.flatten().tolist())
                     
                     
                     # Debug opzionale per verificare le dimensioni
-                    #print(f"Frame {frame_idx}: Keypoints Shape: {keypoints.shape}, Total Keypoints Shape: {pd.DataFrame(video_keypoints).shape}")
+                    print(f"Frame {frame_idx}: Keypoints Shape: {keypoints.shape}, Total Keypoints Shape: {pd.DataFrame(video_keypoints).shape}")
 
                 # Salva i dati aggregati per il video
                 processed_data.append({
@@ -223,6 +225,7 @@ def load_dataset_yolo(cfg):
                     'event': class_label
                 })
 
+            
             return processed_data
 
 
