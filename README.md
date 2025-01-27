@@ -37,5 +37,5 @@ Extract the downloaded files into the root directory of the `patient-monitoring`
    ```yaml
    wandb:
      entity: "baffobello14-universit-di-pisa"
-     project: "patient-monitoring"
+     project: "privacy-patient-monitoring"
    ```
