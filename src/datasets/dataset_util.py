@@ -19,7 +19,7 @@ def load_dataset(cfg):
     train, val, test = None, None, None
 
     if cfg.task == "classification":
-        from datasets.pose.pose_dataset import PoseDatasetByPatients
+        from src.datasets.pose.pose_dataset import PoseDatasetByPatients
 
         train = PoseDatasetByPatients(
             root=cfg.pose_dataset.path,

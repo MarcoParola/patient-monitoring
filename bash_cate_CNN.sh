@@ -5,6 +5,28 @@
 # Configuration files
 CONFIG_FILE="config/config_cate.yaml"
 
+# Virtual environment directory
+VENV_DIR="C:\Users\cater\anaconda3\envs\venv"
+
+#Create and activate a virtual environment
+if [ ! -d "$VENV_DIR" ]; then
+  echo "Creating virtual environment..."
+  python3 -m venv "$VENV_DIR"
+fi
+
+#Activate the virtual environment
+source "$VENV_DIR/Scripts/activate"
+
+#Install dependencies
+if [ -f "requirements.txt" ]; then
+  echo "Installing requirements..."
+  pip install --upgrade pip
+  python.exe -m pip install --upgrade pip
+  pip install -r requirements.txt
+else
+  echo "requirements.txt not found. Please provide one."
+  exit 1
+fi
 
 
 FPS_VALUES=(3)
