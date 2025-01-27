@@ -1,6 +1,6 @@
 from torchvision import transforms
 import torch
-import deeplake
+
 
 def load_dataset(cfg):
     """
