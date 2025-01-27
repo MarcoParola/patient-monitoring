@@ -191,8 +191,15 @@ def load_dataset_yolo(cfg):
                 video = video.permute(3, 0, 1, 2)  # Cambia la forma in (C, T, H, W)
                 original_fps = metadata['video_fps']
                 max_frames = int(5 * original_fps)
-                video = video[:, :max_frames] if video.shape[1] > max_frames else video
-
+                print(max_frames)
+                print(video.size())
+                if video.shape[1] > max_frames:
+                    print("entro")
+                    half_frames = max_frames // 2
+                    video = torch.cat((video[:, :half_frames], video[:, -half_frames-1:]), dim=1)
+                    
+                    print(video.size())
+                
                 # Preprocessa il video (ridimensiona e regola FPS)
                 transform = T.Compose([
                     T.Resize((cfg['pose_dataset']['resize_h'], cfg['pose_dataset']['resize_w'])),
@@ -200,7 +207,7 @@ def load_dataset_yolo(cfg):
                 ])
                 frame_interval = round(original_fps / cfg['pose_dataset']['fps'])
                 video_keypoints = []  # Vettore per accumulare tutti i keypoint del video
-                for frame_idx in range(0, video.shape[1]-1, frame_interval):  # Itera sui frame con intervallo
+                for frame_idx in range(0, video.shape[1]-5, frame_interval):  # Itera sui frame con intervallo
                     frame = video[:, frame_idx]  # Seleziona il frame corrente (C, H, W)
                 
                     # Applica trasformazioni al frame

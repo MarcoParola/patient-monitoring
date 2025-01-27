@@ -20,7 +20,7 @@ class PoseClassifier(pl.LightningModule):
         super(PoseClassifier, self).__init__()
         self.conv_backbone = None
         if (backbone == "YOLO"):
-            self.feature_dim = 17 * 2 * fps * 6  # Number of keypoints for YOLO
+            self.feature_dim = 17 * 2 * fps * 5  # Number of keypoints for YOLO
         if (backbone == "CNN3D"):
             self.conv_backbone = CNN3DLightning(in_channels=input_shape[1])
             self.feature_dim = self.conv_backbone.feature_dim  # Number of features extracted by the backbone
