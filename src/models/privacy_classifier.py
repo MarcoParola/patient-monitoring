@@ -19,9 +19,9 @@ class PrivacyClassifier(pl.LightningModule):
         super(PrivacyClassifier, self).__init__()
         self.learning_rate = learning_rate
         self.conv_backbone = CNN3DLightning(in_channels=channels)
-        self.mlp_skin_color = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[0], task_type='multiclass_classification')
-        self.mlp_gender = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[1], task_type='binary_classification')
-        self.mlp_age = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[2], task_type='regression')
+        self.mlp_skin_color = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[0])
+        self.mlp_gender = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[1])
+        self.mlp_age = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim[2])
 
         # Confusion matrix metrics
         self.confusion_matrix_skin_color = ConfusionMatrix(task="multiclass", num_classes=output_dim[0])

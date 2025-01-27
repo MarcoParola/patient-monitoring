@@ -1,10 +1,9 @@
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
-import torch.nn.functional as F
 
 class MLP(pl.LightningModule):
-    def __init__(self, input_dim, output_dim, task_type='binary_classification'):
+    def __init__(self, input_dim, output_dim):
         super(MLP, self).__init__()
         
         self.fc1 = nn.Linear(input_dim, 256)
@@ -16,28 +15,18 @@ class MLP(pl.LightningModule):
         self.dropout2 = nn.Dropout(p=0.3)
         
         self.output = nn.Linear(128, output_dim)
-        self.activation = nn.GELU()
-        
-        self.task_type = task_type
         
     def forward(self, x):
-        x = self.activation(self.fc1(x))
+        x = self.fc1(x)
         x = self.bn1(x)
         x = self.dropout1(x)
         
-        x = self.activation(self.fc2(x))
+        x = self.fc2(x)
         x = self.bn2(x)
         x = self.dropout2(x)
         
         output = self.output(x)
-        
-        # Activation based on task type
-        if self.task_type == 'binary_classification':
-            return torch.sigmoid(output)
-        elif self.task_type == 'multiclass_classification':
-            return torch.softmax(output, dim=1)
-        elif self.task_type == 'regression':
-            return output
+        return output
     
 if __name__ == "__main__":
     print("Test: PrivacyMLP")
@@ -51,9 +40,9 @@ if __name__ == "__main__":
     output_dim_age = 1  # Numero di classi per age (regressione)
 
     # Modelli MLP per ciascun metadato
-    model_skin_color = MLP(input_dim, output_dim_skin_color, task_type='multiclass_classification')
-    model_gender = MLP(input_dim, output_dim_gender, task_type='binary_classification')
-    model_age = MLP(input_dim, output_dim_age, task_type='regression')
+    model_skin_color = MLP(input_dim, output_dim_skin_color)
+    model_gender = MLP(input_dim, output_dim_gender)
+    model_age = MLP(input_dim, output_dim_age)
 
     # Creiamo l'input (output del ConvBackbone)
     x_skin_color = torch.randn(8, input_dim)  # Output del ConvBackbone

@@ -25,7 +25,7 @@ class PoseClassifier(pl.LightningModule):
         self.output_dim = output_dim
 
         # Multi-Layer Perceptron (MLP) for final classification
-        self.mlp = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim, task_type='multiclass_classification')
+        self.mlp = MLP(input_dim=self.conv_backbone.feature_output_dim, output_dim=output_dim)
 
         # Save the learning rate
         self.learning_rate = learning_rate
