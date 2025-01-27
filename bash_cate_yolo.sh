@@ -59,7 +59,7 @@ for YOLO_MODEL_SIZE in "${YOLO_MODEL_SIZES[@]}"; do
             sed -i "/^test:/,/^$/s/^  patient_ids: .*/  patient_ids: [345]/" "$CONFIG_FILE"
 
         # Esegui lo script Python      
-        #python train_cate.py
+        python train_cate.py
         done  
     done
 done
