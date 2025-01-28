@@ -58,14 +58,10 @@ def main(cfg):
     )
 
     # Training and testing
-    try:
-        trainer.fit(model, train_loader, val_loader)
-        trainer.test(model, test_loader)
-    except Exception as e:
-        print(f"Training failed with error: {str(e)}")
-        raise
-    finally:
-        wandb.finish()
+    trainer.fit(model, train_loader, val_loader)
+    trainer.test(model, test_loader)
+
+    wandb.finish()
 
 if __name__ == "__main__":
     main()
