@@ -51,7 +51,7 @@ class PoseClassifier(pl.LightningModule):
             video_input = self.conv_backbone(video_input)     
         elif (self.conv_backbone.__class__.__name__ != "OpenPoseAPI"):
             print("entro")
-            video_input = video_input.flatten()
+            video_input = video_input
             print(video_input.shape)
          
         output = self.mlp(video_input)
