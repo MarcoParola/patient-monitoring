@@ -53,7 +53,6 @@ def main(cfg):
         max_epochs=cfg.train.max_epochs,
         callbacks=model.configure_callbacks(cfg.train.early_stopping, cfg.train.patience),
         logger=wandb_logger,
-        deterministic=True,  # Ensure reproducibility
         precision='16-mixed' if cfg.train.accelerator == "gpu" else '32'
     )
 
