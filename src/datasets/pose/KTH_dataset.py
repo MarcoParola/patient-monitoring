@@ -57,7 +57,7 @@ class KTHDataset(Dataset):
         event = row['class']
 
         # Construct the path to the video file
-        video_path = os.path.join(self.root, event, f"{video_id}")
+        video_path = os.path.join(self.root,f"{video_id}")
         print(video_path)
 
         # Check if the video file exists

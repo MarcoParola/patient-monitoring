@@ -16,14 +16,17 @@ import os
 from PIL import Image as PILImage
 
 class PoseClassifier(pl.LightningModule):
-    def __init__(self, input_shape=(1, 3, 20, 640, 480), output_dim=9, backbone="CNN3D", end = "mlp", detect_face=False, detect_hands=False, fps=1):
+    def __init__(self, input_shape=(1, 3, 20, 640, 480), output_dim=9, backbone="CNN3D", end = "mlp", detect_face=False, dataset="Custom", detect_hands=False, fps=1):
         super(PoseClassifier, self).__init__()
         self.conv_backbone = None
         if (backbone == "YOLO"):
             self.feature_dim = 17 * 2 * fps * 5  # Number of keypoints for YOLO
         if (backbone == "CNN3D"):
-            self.conv_backbone = CNN3DLightning(in_channels=input_shape[1])
+            if dataset == "KTH":
+                kth = True
+            self.conv_backbone = CNN3DLightning(in_channels=input_shape[1], kth=kth)
             self.feature_dim = self.conv_backbone.feature_dim  # Number of features extracted by the backbone
+            print(self.feature_dim)
         elif (backbone == "OpenPose"):
             self.conv_backbone = OpenPoseAPI(detect_face=detect_face, detect_hands=detect_hands, fps=fps)
             self.feature_dim = self.conv_backbone.feature_dim

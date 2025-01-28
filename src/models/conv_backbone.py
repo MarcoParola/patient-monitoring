@@ -4,12 +4,15 @@ import pytorch_lightning as pl
 import torch.nn.functional as F
 
 class CNN3DLightning(pl.LightningModule):
-    def __init__(self, in_channels=3, learning_rate=1e-4):
+    def __init__(self, in_channels=3, learning_rate=1e-4, kth=False):
         super(CNN3DLightning, self).__init__()
         self.learning_rate = learning_rate
         
          # Initialize the feature output dimension and dropout rate
-        self.feature_dim = 256
+        if kth:
+            self.feature_dim = 128
+        else:
+            self.feature_dim = 256
         self.dropout = nn.Dropout3d(p=0.1)
         
         # Block 1
@@ -30,7 +33,10 @@ class CNN3DLightning(pl.LightningModule):
         
         # Flatten the output and extract features
         self.flatten = nn.Flatten()
-        self.feature_extractor = nn.Linear(256, self.feature_dim)
+        if kth:
+            self.feature_extractor = nn.Linear(128, self.feature_dim)
+        else:
+            self.feature_extractor = nn.Linear(256, self.feature_dim)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
