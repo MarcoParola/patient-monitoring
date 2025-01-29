@@ -15,7 +15,7 @@ def load_model(cfg):
     model = None
     if cfg.task == "classification":
         from src.models.pose_classifier import PoseClassifier
-        model = PoseClassifier(input_shape=(cfg.train.batch_size, cfg.in_channels, cfg.depth, cfg.width, cfg.height), output_dim=cfg.output_dim, backbone=cfg.conv_backbone, detect_face=cfg.openpose.detect_face, detect_hands=cfg.openpose.detect_hands, dataset=cfg.dataset, fps=cfg.pose_dataset.fps, end=cfg.end)
+        model = PoseClassifier(input_shape=(cfg.train.batch_size, cfg.in_channels, cfg.depth, cfg.width, cfg.height), output_dim=cfg.output_dim, backbone=cfg.conv_backbone, detect_face=cfg.openpose.detect_face, detect_hands=cfg.openpose.detect_hands, dataset=cfg.dataset, fps=cfg.pose_dataset.fps, end=cfg.end, lr = cfg.train.lr)
     
     return model
 

@@ -16,9 +16,10 @@ import os
 from PIL import Image as PILImage
 
 class PoseClassifier(pl.LightningModule):
-    def __init__(self, input_shape=(1, 3, 20, 640, 480), output_dim=9, backbone="CNN3D", end = "mlp", detect_face=False, dataset="Custom", detect_hands=False, fps=1):
+    def __init__(self, input_shape=(1, 3, 20, 640, 480), output_dim=9, backbone="CNN3D", end = "mlp", detect_face=False, dataset="Custom", detect_hands=False, fps=1, lr = 0.00001):
         super(PoseClassifier, self).__init__()
         self.conv_backbone = None
+        self.lr=lr
         if (backbone == "YOLO"):
             self.feature_dim = 17 * 2 * fps * 5  # Number of keypoints for YOLO
         if (backbone == "CNN3D"):
@@ -164,7 +165,7 @@ class PoseClassifier(pl.LightningModule):
         self.accumulated_test_labels.clear()
 
     def configure_optimizers(self):
-        optimizer = Adam(self.parameters(), lr=0.0001)
+        optimizer = Adam(self.parameters(), lr=self.lr)
         return optimizer
 
     def compute_accuracy(self, preds, labels):
