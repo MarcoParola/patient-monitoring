@@ -205,18 +205,23 @@ def load_KTH(cfg):
             root=cfg.KTH_dataset.path,
             csv_path=cfg.KTH_dataset.csv_path,
             transform=train_transform,
-            KTH_actions=cfg.KTH_actions
+            KTH_actions=cfg.KTH_actions,
+            person_ids=cfg.KTH_dataset.train
         )
         val = KTHDataset(
             root=cfg.KTH_dataset.path,
             csv_path=cfg.KTH_dataset.csv_path,
             transform=val_transform,
-            KTH_actions=cfg.KTH_actions
+            KTH_actions=cfg.KTH_actions,
+            person_ids=cfg.KTH_dataset.val
         )
         test = KTHDataset(
             root=cfg.KTH_dataset.path,
             csv_path=cfg.KTH_dataset.csv_path,
             transform=test_transform,
-            KTH_actions=cfg.KTH_actions
+            KTH_actions=cfg.KTH_actions,
+            person_ids=cfg.KTH_dataset.test
         )
+
+    print(train.__len__()), print(val.__len__()), print(test.__len__())
     return train, val, test

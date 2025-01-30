@@ -33,10 +33,8 @@ class CNN3DLightning(pl.LightningModule):
         
         # Flatten the output and extract features
         self.flatten = nn.Flatten()
-        if kth:
-            self.feature_extractor = nn.Linear(128, self.feature_dim)
-        else:
-            self.feature_extractor = nn.Linear(256, self.feature_dim)
+       
+        self.feature_extractor = nn.Linear(256, self.feature_dim)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))

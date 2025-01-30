@@ -61,9 +61,9 @@ for FPS in "${FPS_VALUES[@]}"; do
     fi
 
     if ! grep -q "^dataset:" "$CONFIG_FILE"; then
-      echo "dataset: \"Custom\"" >> "$CONFIG_FILE"
+      echo "dataset: \"KTH\"" >> "$CONFIG_FILE"
     else
-      sed -i "s/^dataset: .*/dataset: \"Custom\"/" "$CONFIG_FILE"
+      sed -i "s/^dataset: .*/dataset: \"KTH\"/" "$CONFIG_FILE"
     fi
 
     # Execute the Python script for CNN trial

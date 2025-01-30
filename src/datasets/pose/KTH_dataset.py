@@ -7,7 +7,7 @@ import torchvision.io
 import json
 
 class KTHDataset(Dataset):
-    def __init__(self, root, csv_path, transform=None, KTH_actions=None, actions=None):
+    def __init__(self, root, csv_path, transform=None, KTH_actions=None, actions=None, person_ids=None):
         """
         Initialize the dataset.
 
@@ -22,10 +22,11 @@ class KTHDataset(Dataset):
         self.root = root
         self.transform = transform
         self.pose_map = KTH_actions  # Salva la mappatura nel dataset
+        
 
         # Load the CSV and filter by patient_ids and camera_type
         self.data = pd.read_csv(csv_path, quotechar='"')  # Handle quoted strings properly
-    
+        self.data = self.data[self.data['person_id'].isin(person_ids)]
         if actions is not None:
             self.data = self.data[self.data['action'] in actions]
               
@@ -58,7 +59,6 @@ class KTHDataset(Dataset):
 
         # Construct the path to the video file
         video_path = os.path.join(self.root,f"{video_id}")
-        print(video_path)
 
         # Check if the video file exists
         if not os.path.exists(video_path):
