@@ -2,6 +2,7 @@ defaults:
   - _self_
   - dataset
   - KTH
+
 wandb:
   entity: "c-bruchi-university-of-pisa"
   project: "pat-mon"
@@ -15,14 +16,14 @@ depth: 20
 width: 1920
 height: 1080
 output_dim : 9
-extract_keypoints: True 
-conv_backbone: "CNN3D"
+extract_keypoints: True
+conv_backbone: "YOLO"
 end: "mlp"
 dataset: "Custom"
 
 
 yolo:
-  model_size: "m"
+  model_size: "n"
 openpose:
   detect_hands: False
   detect_face: False
@@ -31,39 +32,42 @@ openpose:
 pose_dataset:
   path: dataset/position
   csv_path: dataset/position.csv
-  processed_csv: dataset/position_OP_body.csv
-  resize_h: 256
-  resize_w: 256
+  processed_csv: dataset/keypoints_YOLO_x_3.csv
+  resize_h: 480
+  resize_w: 640
   fps: 3
 
 
 KTH_dataset:
   path: dataset/KTH
-  csv_path: dataset/KTH.csv
-  resize_h: 256
-  resize_w: 256
-  fps: 3
+  csv_path: dataset/KTH_cut.csv
+  resize_h: 120
+  resize_w: 160
+  fps: 5
+  train: [11, 12, 13, 14, 15, 16, 17, 18]
+  test: [19, 20, 21, 23, 24, 25, 01, 04]
+  val: [22, 02, 03, 05, 06, 07, 08, 09, 10]
 
 train:
   save_path: "./models/"
-  batch_size: 1
-  lr: 1e-5
-  max_epochs: 5
+  batch_size: 8
+  lr: 1e-6
+  max_epochs: 100
   num_workers: 1
   patient_ids: [123,234]
-  camera_type: 0
-  accelerator: "cpu"
+  camera_type: 2
+  accelerator: "gpu"
   devices: 1
   seed: -1
   patience: 15
 
 val:
   patient_ids: [345]
-  camera_type: 0
+  camera_type: 
 
 test:
   patient_ids: [345]
-  camera_type: 0
+  camera_type: 
 
 log:  
   path: "./logs/"
