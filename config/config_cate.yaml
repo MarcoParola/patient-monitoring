@@ -63,11 +63,11 @@ train:
 
 val:
   patient_ids: [345]
-  camera_type: 
+  camera_type: 2
 
 test:
   patient_ids: [345]
-  camera_type: 
+  camera_type: 2
 
 log:  
   path: "./logs/"
