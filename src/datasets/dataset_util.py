@@ -125,68 +125,6 @@ def get_transform(resize_h, resize_w, fps):
     return train_transform, val_transform, test_transform
 
 
-def load_HMDB(cfg):
-    
-    # Ottenere le trasformazioni per i dataset
-    train_transform, val_transform, test_transform = get_transform(cfg.pose_dataset.resize_h, cfg.pose_dataset.resize_w, cfg.pose_dataset.fps)
-    
-    # Inizializzazione dataset
-    train, val, test = None, None, None
-
-    if cfg.task == "classification":
-        from src.datasets.pose.HMDB_dataset import HMDBDataset
-
-        train = HMDBDataset(
-            root=cfg.pose_dataset.path,
-            csv_path=cfg.pose_dataset.csv_path,
-            transform=train_transform,
-            pose_map=cfg.action_map
-        )
-        val = HMDBDataset(
-            root=cfg.pose_dataset.path,
-            csv_path=cfg.pose_dataset.csv_path,
-            transform=val_transform,
-            pose_map=cfg.action_map
-        )
-        test = HMDBDataset(
-            root=cfg.pose_dataset.path,
-            csv_path=cfg.pose_dataset.csv_path,
-            transform=test_transform,
-            pose_map=cfg.action_map
-        )
-    # elif cfg.task == "privacy":
-    #     from src.datasets.pose.HMDB_dataset import HMDBDatasetPrivacy
-
-    #     train = HMDBDatasetPrivacy(
-    #         root=cfg.pose_dataset.path,
-    #         root_privacy=cfg.path_privacy,
-    #         csv_path=cfg.pose_dataset.csv_path,
-    #         patient_ids=cfg.train.patient_ids,
-    #         transform=train_transform,
-    #         camera_type=cfg.train.camera_type,
-    #         pose_map=cfg.pose_map
-    #     )
-    #     val = HMDBDatasetPrivacy(
-    #         root=cfg.pose_dataset.path,
-    #         root_privacy=cfg.path_privacy,
-    #         csv_path=cfg.pose_dataset.csv_path,
-    #         patient_ids=cfg.val.patient_ids,
-    #         transform=val_transform,
-    #         camera_type=cfg.val.camera_type,
-    #         pose_map=cfg.pose_map
-    #     )
-    #     test = HMDBDatasetPrivacy(
-    #         root=cfg.pose_dataset.path,
-    #         root_privacy=cfg.path_privacy,
-    #         csv_path=cfg.pose_dataset.csv_path,
-    #         patient_ids=cfg.test.patient_ids,
-    #         transform=test_transform,
-    #         camera_type=cfg.test.camera_type,
-    #         pose_map=cfg.pose_map
-    #     )
-
-    return train, val, test
-
 
 
 

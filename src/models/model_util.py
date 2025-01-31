@@ -8,7 +8,7 @@ import torch
 import torchvision.transforms as T
 import torchvision.io
 from src.models.skeleton.yolo_skeleton import YOLOPoseAPI
-
+from src.datasets.dataset_util import SelectFrames
         
 
 def load_model(cfg):
@@ -172,6 +172,65 @@ def load_dataset_yolo(cfg):
         csv_path = cfg['pose_dataset']['csv_path']
         df = pd.read_csv(csv_path)
 
+        # def process_data(model_size="n"):
+        #     processed_data = []
+
+        #     yolo_pose_api = YOLOPoseAPI(model_size)  # Inizializza YOLOPoseAPI
+
+        #     for _, row in df.iterrows():
+        #         video_id = row['video_id']
+        #         patient_id = row['patient_id']
+        #         camera_type = row['camera_type']
+        #         class_label = row['event']  # Class è direttamente la colonna "event"
+
+        #         # Percorso del video originale
+        #         video_path = Path(cfg['pose_dataset']['path'], f"{video_id}.mp4").resolve()
+
+        #         # Legge il video come tensore (T, H, W, C)
+        #         video, _, metadata = torchvision.io.read_video(str(video_path), pts_unit="sec")
+        #         video = video.permute(3, 0, 1, 2)  # Cambia la forma in (C, T, H, W)
+        #         original_fps = metadata['video_fps']
+        #         max_frames = int(5 * original_fps)
+        #         if video.shape[1] > max_frames:
+        #             print("entro")
+        #             half_frames = max_frames // 2
+        #             video = torch.cat((video[:, :half_frames], video[:, -half_frames-1:]), dim=1)
+                    
+        #         # Preprocessa il video (ridimensiona e regola FPS)
+        #         transform = T.Compose([
+        #             T.Resize((cfg['pose_dataset']['resize_h'], cfg['pose_dataset']['resize_w'])),
+        #             T.ConvertImageDtype(torch.float32)  # Normalizza i pixel nell'intervallo [0, 1]
+        #         ])
+        #         frame_interval = round(original_fps / cfg['pose_dataset']['fps'])
+        #         video_keypoints = []  # Vettore per accumulare tutti i keypoint del video
+        #         for frame_idx in range(0, video.shape[1]-5, frame_interval):  # Itera sui frame con intervallo
+        #             frame = video[:, frame_idx]  # Seleziona il frame corrente (C, H, W)
+                
+        #             # Applica trasformazioni al frame
+        #             preprocessed_frame = transform(frame)
+                    
+        #             # Estrai i keypoint dal frame preprocessato
+        #             keypoints = yolo_pose_api(preprocessed_frame.unsqueeze(0))  # Passa il frame alla rete YOLOPoseAPI
+        #             print(keypoints.size())
+        #             # Concatenazione diretta dei keypoint
+        #             video_keypoints.extend(keypoints.flatten().tolist())
+                    
+                    
+        #             # Debug opzionale per verificare le dimensioni
+        #             print(f"Frame {frame_idx}: Keypoints Shape: {keypoints.shape}, Total Keypoints Shape: {pd.DataFrame(video_keypoints).shape}")
+
+        #         # Salva i dati aggregati per il video
+        #         processed_data.append({
+        #             'video_id': video_id,
+        #             'patient_id': patient_id,
+        #             'camera_type': camera_type,
+        #             'keypoints': video_keypoints,  # Vettore piatto di keypoint per tutto il video
+        #             'event': class_label
+        #         })
+
+            
+        #     return processed_data
+
         def process_data(model_size="n"):
             processed_data = []
 
@@ -190,38 +249,33 @@ def load_dataset_yolo(cfg):
                 video, _, metadata = torchvision.io.read_video(str(video_path), pts_unit="sec")
                 video = video.permute(3, 0, 1, 2)  # Cambia la forma in (C, T, H, W)
                 original_fps = metadata['video_fps']
-                max_frames = int(5 * original_fps)
-                print(max_frames)
-                print(video.size())
-                if video.shape[1] > max_frames:
-                    print("entro")
-                    half_frames = max_frames // 2
-                    video = torch.cat((video[:, :half_frames], video[:, -half_frames-1:]), dim=1)
-                    
-                    print(video.size())
-                
-                # Preprocessa il video (ridimensiona e regola FPS)
+                total_frames = video.shape[1]
+
+                # Crea un'istanza di SelectFrames con fps desiderato
+                select_frames = SelectFrames(fps=15)
+
+                # Seleziona i frame desiderati
+                selected_frames = select_frames(video)
+
+                # Preprocessa i frame (ridimensiona e regola FPS)
                 transform = T.Compose([
                     T.Resize((cfg['pose_dataset']['resize_h'], cfg['pose_dataset']['resize_w'])),
                     T.ConvertImageDtype(torch.float32)  # Normalizza i pixel nell'intervallo [0, 1]
                 ])
-                frame_interval = round(original_fps / cfg['pose_dataset']['fps'])
-                video_keypoints = []  # Vettore per accumulare tutti i keypoint del video
-                for frame_idx in range(0, video.shape[1]-5, frame_interval):  # Itera sui frame con intervallo
-                    frame = video[:, frame_idx]  # Seleziona il frame corrente (C, H, W)
                 
+                video_keypoints = []  # Vettore per accumulare tutti i keypoint del video
+                for frame in selected_frames.permute(1, 0, 2, 3):  # Itera sui frame selezionati (C, H, W)
                     # Applica trasformazioni al frame
                     preprocessed_frame = transform(frame)
                     
                     # Estrai i keypoint dal frame preprocessato
                     keypoints = yolo_pose_api(preprocessed_frame.unsqueeze(0))  # Passa il frame alla rete YOLOPoseAPI
-                    print(keypoints.size())
+                    
                     # Concatenazione diretta dei keypoint
                     video_keypoints.extend(keypoints.flatten().tolist())
                     
-                    
                     # Debug opzionale per verificare le dimensioni
-                    print(f"Frame {frame_idx}: Keypoints Shape: {keypoints.shape}, Total Keypoints Shape: {pd.DataFrame(video_keypoints).shape}")
+                    print(f"Frame {frame}: Keypoints Shape: {keypoints.shape}, Total Keypoints Shape: {pd.DataFrame(video_keypoints).shape}")
 
                 # Salva i dati aggregati per il video
                 processed_data.append({
@@ -232,9 +286,7 @@ def load_dataset_yolo(cfg):
                     'event': class_label
                 })
 
-            
             return processed_data
-
 
         if cfg.extract_keypoints:
             processed_data = process_data(cfg['yolo']['model_size'])
