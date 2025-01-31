@@ -56,7 +56,7 @@ train:
   num_workers: 1
   patient_ids: [123,234]
   camera_type: 2
-  accelerator: "cpu"
+  accelerator: "gpu"
   devices: 0
   seed: -1
   patience: 15
