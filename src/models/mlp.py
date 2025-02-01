@@ -9,11 +9,13 @@ class MLP(pl.LightningModule):
         
         # Layer MLP
         self.fc = nn.Linear(input_dim, 256)
+        self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.4)
         self.output = nn.Linear(256, output_dim)
 
     def forward(self, x):
         x = self.fc(x)
+        x = self.relu(x)
         x = self.dropout(x)
         output = self.output(x)
         return output
