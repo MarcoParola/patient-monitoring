@@ -3,19 +3,25 @@ import torch.nn as nn
 import pytorch_lightning as pl
 import torch.nn.functional as F
 
-class CNN3DLightning(pl.LightningModule):
+class DeepCNN3D(pl.LightningModule):
     def __init__(self, in_channels=3, learning_rate=1e-4, kth=False):
-        super(CNN3DLightning, self).__init__()
+        super(DeepCNN3D, self).__init__()
         self.learning_rate = learning_rate
         
          # Initialize the feature output dimension and dropout rate
-        
-        self.feature_dim = 256
+        if kth:
+            self.feature_dim = 256
+        else:
+            self.feature_dim = 256
         self.dropout = nn.Dropout3d(p=0.1)
         
         # Block 1
-        self.conv1 = nn.Conv3d(in_channels=in_channels, out_channels=16, kernel_size=7, stride=3, padding=3)
+        self.conv1 = nn.Conv3d(in_channels=in_channels, out_channels=8, kernel_size=7, stride=3, padding=3)
         self.pool1 = nn.MaxPool3d(kernel_size=7, stride=3, padding=3)
+        
+        #additional block
+        self.conv1_1 = nn.Conv3d(in_channels=8, out_channels=16, kernel_size=5, stride=2, padding=2)
+        self.pool1_1 = nn.MaxPool3d(kernel_size=5, stride=2, padding=2)
         
         # Block 2
         self.conv2 = nn.Conv3d(in_channels=16, out_channels=32, kernel_size=5, stride=2, padding=2)
@@ -33,13 +39,16 @@ class CNN3DLightning(pl.LightningModule):
         self.flatten = nn.Flatten()
        
         if kth:
-            self.feature_extractor = nn.Linear(128, self.feature_dim)
+            self.feature_extractor = nn.Linear(64, self.feature_dim)
         else:
             self.feature_extractor = nn.Linear(256, self.feature_dim)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = self.pool1(x)
+        x = self.dropout(x)
+        x = F.relu(self.conv1_1(x))
+        x = self.pool1_1(x)
         x = self.dropout(x)
         x = F.relu(self.conv2(x))
         x = self.pool2(x)
@@ -51,7 +60,9 @@ class CNN3DLightning(pl.LightningModule):
         x = self.pool4(x)
         x = self.dropout(x)
         x = self.flatten(x)
+    
         x = self.feature_extractor(x)
+        
         return x
 
 
@@ -90,7 +101,7 @@ if __name__ == "__main__":
     
     # Configurazione
     input_channels = 3
-    model = CNN3DLightning(in_channels=input_channels)
+    model = DeepCNN3D(in_channels=input_channels)
     
     # Test forward
     x = torch.randn(3, input_channels, 20, 256, 256)

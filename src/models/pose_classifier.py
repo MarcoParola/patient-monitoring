@@ -4,6 +4,7 @@ import pytorch_lightning as pl
 import torch.nn.functional as F
 from torch.optim import Adam
 from src.models.conv_backbone import CNN3DLightning
+from src.models.deep_conv_backbone import DeepCNN3D
 from src.models.skeleton.openpose.openpose_skeleton import OpenPoseAPI
 from src.models.mlp import MLP
 from src.models.LSTM import LSTM
@@ -20,18 +21,20 @@ class PoseClassifier(pl.LightningModule):
         super(PoseClassifier, self).__init__()
         self.conv_backbone = None
         self.lr=lr
+        if dataset == "KTH":
+                kth = True
         if (backbone == "YOLO"):
             self.feature_dim = 17 * 2 * 15  # Number of keypoints for YOLO
-        if (backbone == "CNN3D"):
-            if dataset == "KTH":
-                kth = True
+        elif (backbone == "CNN3D"):
             self.conv_backbone = CNN3DLightning(in_channels=input_shape[1], kth=kth)
             self.feature_dim = self.conv_backbone.feature_dim  # Number of features extracted by the backbone
             print(self.feature_dim)
         elif (backbone == "OpenPose"):
             self.conv_backbone = OpenPoseAPI(detect_face=detect_face, detect_hands=detect_hands, fps=fps)
             self.feature_dim = self.conv_backbone.feature_dim
-
+        elif (backbone == "DCNN"):
+            self.conv_backbone = DeepCNN3D(in_channels=input_shape[1], kth=kth)
+            self.feature_dim = self.conv_backbone.feature_dim
         # MLP for final classification
         
         if (end == "mlp"):
@@ -48,7 +51,7 @@ class PoseClassifier(pl.LightningModule):
         self.accumulated_test_labels = []
 
     def forward(self, video_input):
-        if (self.conv_backbone.__class__.__name__ == "CNN3DLightning"):
+        if (self.conv_backbone.__class__.__name__ == "CNN3DLightning" or self.conv_backbone.__class__.__name__ == "DeepCNN3D"):
             video_input = self.conv_backbone(video_input)     
         elif (self.conv_backbone.__class__.__name__ != "OpenPoseAPI"):
             print("entro")

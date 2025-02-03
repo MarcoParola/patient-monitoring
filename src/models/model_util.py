@@ -339,10 +339,6 @@ def load_dataset_yolo(cfg):
                 pd.DataFrame(processed_data).to_csv(processed_data_path, index=False)
 
 
-
-        
-
-
         train = PoseDatasetKeypoints(
             root=cfg.pose_dataset.path,
             csv_path=cfg.pose_dataset.processed_csv,
