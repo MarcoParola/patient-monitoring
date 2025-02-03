@@ -12,6 +12,7 @@ from src.models.model_util import *
 from src.datasets.dataset_util import *
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
+torch.set_float32_matmul_precision('medium')
 
 @hydra.main(config_path="config", config_name="config_cate", version_base=None)
 def main(cfg):

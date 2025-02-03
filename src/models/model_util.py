@@ -9,6 +9,7 @@ import torchvision.transforms as T
 import torchvision.io
 from src.models.skeleton.yolo_skeleton import YOLOPoseAPI
 from src.datasets.dataset_util import SelectFrames
+import csv
         
 
 def load_model(cfg):
@@ -213,7 +214,6 @@ def load_dataset_yolo(cfg):
         processed_data = []
 
       
-        
         def process_data(df, model_size="n"):
             processed_data = []
 
@@ -295,7 +295,7 @@ def load_dataset_yolo(cfg):
 
                 # Preprocess the frames (resize and adjust FPS)
                 transform = T.Compose([
-                    T.Resize((cfg['pose_dataset']['resize_h'], cfg['pose_dataset']['resize_w'])),
+                    T.Resize((cfg['KTH_dataset']['resize_h'], cfg['KTH_dataset']['resize_w'])),
                     T.ConvertImageDtype(torch.float32)  # Normalize pixels to the range [0, 1]
                 ])
 
@@ -337,6 +337,11 @@ def load_dataset_yolo(cfg):
                 processed_data = process_data(df, cfg['yolo']['model_size'])
                 processed_data_path = Path(cfg['pose_dataset']['processed_csv']).resolve()
                 pd.DataFrame(processed_data).to_csv(processed_data_path, index=False)
+
+
+
+        
+
 
         train = PoseDatasetKeypoints(
             root=cfg.pose_dataset.path,
