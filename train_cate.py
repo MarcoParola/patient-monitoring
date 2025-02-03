@@ -28,7 +28,6 @@ def main(cfg):
     if cfg.conv_backbone == "OpenPose":
         train, val, test = load_dataset_openpose(cfg)
     elif cfg.conv_backbone == "CNN3D":
-       
         if cfg.dataset == "KTH":
             train, val, test = load_KTH(cfg)
         else:
