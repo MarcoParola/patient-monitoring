@@ -52,6 +52,7 @@ def main(cfg):
     )
 
     # Configurazione WandbLogger
+    wandb.login(key="2de1ea8b2991ab252ea6c18e464c4df031c43592")
     wandb.init(
         entity=cfg.wandb.entity,
         project=cfg.wandb.project
