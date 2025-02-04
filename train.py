@@ -35,6 +35,8 @@ def main(cfg):
     val_loader = DataLoader(val, shuffle=False, **dataloader_kwargs)
     test_loader = DataLoader(test, shuffle=False, **dataloader_kwargs)
 
+    wandb.login(key='0a52e386cdaa1d52534501c23c14b014d757af3b')
+
     # WandB configuration
     wandb.init(
         entity=cfg.wandb.entity,
