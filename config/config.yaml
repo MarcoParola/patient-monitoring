@@ -18,7 +18,7 @@ train:
   patient_ids: [123, 234]
   camera_type: 0
   accelerator: "gpu"
-  devices: [0]
+  devices: [1]
   early_stopping: False
   patience: 30
   seed: -1
