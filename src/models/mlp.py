@@ -7,11 +7,11 @@ class MLP(pl.LightningModule):
         super(MLP, self).__init__()
         
         self.fc1 = nn.Linear(input_dim, 256)
-        self.bn1 = nn.BatchNorm1d(256)
+        self.bn1 = nn.LayerNorm(256)
         self.dropout1 = nn.Dropout(p=0.4)
         
         self.fc2 = nn.Linear(256, 128)
-        self.bn2 = nn.BatchNorm1d(128)
+        self.bn2 = nn.LayerNorm(128)
         self.dropout2 = nn.Dropout(p=0.3)
         
         self.output = nn.Linear(128, output_dim)
@@ -33,6 +33,7 @@ if __name__ == "__main__":
 
     # Parametri di input (output del ConvBackbone)
     input_dim = 256  # La dimensione dell'output del ConvBackbone (flattened size)
+    batch_size = 1  # Dimensione del batch
 
     # Numero di classi per ciascun metadato
     output_dim_skin_color = 4  # Numero di classi per skin color
@@ -45,15 +46,15 @@ if __name__ == "__main__":
     model_age = MLP(input_dim, output_dim_age)
 
     # Creiamo l'input (output del ConvBackbone)
-    x_skin_color = torch.randn(8, input_dim)  # Output del ConvBackbone
+    x_skin_color = torch.randn(batch_size, input_dim)  # Output del ConvBackbone
     output_skin_color = model_skin_color(x_skin_color)
     print(f"Skin color output shape: {output_skin_color.shape}")  # Dovrebbe essere (batch_size, 4)
 
-    x_gender = torch.randn(8, input_dim)  # Output del ConvBackbone
+    x_gender = torch.randn(batch_size, input_dim)  # Output del ConvBackbone
     output_gender = model_gender(x_gender)
     print(f"Gender output shape: {output_gender.shape}")  # Dovrebbe essere (batch_size, 1)
 
-    x_age = torch.randn(8, input_dim)  # Output del ConvBackbone
+    x_age = torch.randn(batch_size, input_dim)  # Output del ConvBackbone
     output_age = model_age(x_age)
     print(f"Age output shape: {output_age.shape}")  # Dovrebbe essere (batch_size, 1)
 
