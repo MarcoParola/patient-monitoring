@@ -22,6 +22,8 @@ class DeepCNN3D(pl.LightningModule):
         #additional block
         self.conv1_1 = nn.Conv3d(in_channels=8, out_channels=16, kernel_size=5, stride=2, padding=2)
         self.pool1_1 = nn.MaxPool3d(kernel_size=5, stride=2, padding=2)
+        # self.conv1_1 = nn.Conv3d(in_channels=8, out_channels=16, kernel_size=7, stride=3, padding=3)
+        # self.pool1_1 = nn.MaxPool3d(kernel_size=7, stride=3, padding=3)
         
         # Block 2
         self.conv2 = nn.Conv3d(in_channels=16, out_channels=32, kernel_size=5, stride=2, padding=2)

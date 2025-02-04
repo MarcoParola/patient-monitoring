@@ -234,7 +234,7 @@ def load_dataset_yolo(cfg):
             
 
                 # Crea un'istanza di SelectFrames con fps desiderato
-                select_frames = SelectFrames(fps=15)
+                select_frames = SelectFrames(fps=3*cfg['pose_dataset']['fps'])
 
                 # Seleziona i frame desiderati
                 selected_frames = select_frames(video)
@@ -288,7 +288,7 @@ def load_dataset_yolo(cfg):
                 video = video.permute(3, 0, 1, 2)  # Change shape to (C, T, H, W)
 
                 # Create an instance of SelectFrames with the desired fps
-                select_frames = SelectFrames(fps=15)
+                select_frames = SelectFrames(fps=3*cfg['KTH_dataset']['fps'])
 
                 # Select the desired frames
                 selected_frames = select_frames(video)

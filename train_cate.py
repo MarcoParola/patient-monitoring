@@ -68,7 +68,7 @@ def main(cfg):
     # Configurazione EarlyStopping
     early_stop_callback = EarlyStopping(
         monitor='val_loss', 
-        patience=15,         
+        patience=cfg.train.patience,         
         verbose=True    
     )
 
