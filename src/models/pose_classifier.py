@@ -23,6 +23,8 @@ class PoseClassifier(pl.LightningModule):
         self.lr=lr
         if dataset == "KTH":
                 kth = True
+        else:
+            kth = False
         if (backbone == "YOLO"):
             self.feature_dim = 17 * 2 * 15  # Number of keypoints for YOLO
         elif (backbone == "CNN3D"):

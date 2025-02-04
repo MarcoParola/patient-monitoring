@@ -14,20 +14,17 @@ class OpenPoseAPI:
         :param detect_hands: Booleano per abilitare il rilevamento delle mani.
         :param fps: Frame per secondo del video.
         """
-        # Controlla la durata del video in secondi
-        video_duration = 5  # Supponiamo che il video duri 5 secondi
         
         # Determina i keypoints per frame
         self.keypoints_per_frame = 25  # Corpo base (Body-25)
         if detect_hands:
             self.keypoints_per_frame += 21 * 2  # Mani (21 keypoints per mano)
-        if detect_face:
-            self.keypoints_per_frame += 70  # Viso
+        
         
         # print(f"Keypoints per frame: {keypoints_per_frame}")
         # print(f"FPS: {fps}")
         # Calcola il numero totale di feature
-        self.feature_dim = self.keypoints_per_frame * 2 * fps * video_duration 
+        self.feature_dim = self.keypoints_per_frame * 2 * 15
         
         if video_path is not None:
             self.keypoints = self.process_video_with_openpose(video_path, detect_face=detect_face, detect_hands=detect_hands)

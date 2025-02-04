@@ -10,6 +10,7 @@ import torchvision.io
 from src.models.skeleton.yolo_skeleton import YOLOPoseAPI
 from src.datasets.dataset_util import SelectFrames
 import csv
+import numpy as np
         
 
 def load_model(cfg):
@@ -34,58 +35,6 @@ def load_dataset_openpose(cfg):
         df = pd.read_csv(csv_path)
 
 
-        # def preprocess_video(video_path, target_size=(224, 224), target_fps=30):
-            # """
-            # Preprocessa un video ridimensionandolo e regolando il numero di FPS.
-            
-            # :param video_path: Percorso del video da preprocessare.
-            # :param target_size: Dimensione desiderata dei frame (larghezza, altezza).
-            # :param target_fps: Numero desiderato di FPS per il video preprocessato.
-            # :return: Percorso del video preprocessato.
-            # """
-            # cap = cv2.VideoCapture(str(video_path))
-            # original_fps = cap.get(cv2.CAP_PROP_FPS)
-            # total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            # duration = total_frames / original_fps
-            
-            # # Percorso del video preprocessato
-            # preprocessed_video_path = video_path.parent / f"{video_path.stem}_preprocessed.mp4"
-            # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            # out = cv2.VideoWriter(str(preprocessed_video_path), fourcc, target_fps, target_size)
-            
-            # # Calcolo il numero totale di frame attesi
-            # target_total_frames = int(duration * target_fps)
-            
-            
-            # next_frame_time = 0  # Tempo del frame successivo da estrarre
-            # frame_idx = 0
-            # target_frame_idx = 0
-
-            # while cap.isOpened():
-            #     ret, frame = cap.read()
-            #     if not ret:
-            #         break
-
-            #     current_time = frame_idx / original_fps
-            #     if current_time >= next_frame_time:
-            #         resized_frame = cv2.resize(frame, target_size)
-            #         out.write(resized_frame)
-            #         target_frame_idx += 1
-            #         next_frame_time += 1 / target_fps
-
-            #         # Interrompo se raggiungo il numero desiderato di frame
-            #         if target_frame_idx >= target_total_frames:
-            #             break
-                
-            #     frame_idx += 1
-    
-
-            # cap.release()
-            # out.release()
-            # return preprocessed_video_path
-        
- 
-
         def preprocess_video(video_path, target_size=(224, 224), target_fps=30):
             """
             Preprocessa un video ridimensionandolo e regolando il numero di FPS.
@@ -100,35 +49,42 @@ def load_dataset_openpose(cfg):
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             duration = total_frames / original_fps
             
-            preprocessed_video_path = Path(video_path).parent / f"{Path(video_path).stem}_preprocessed.mp4"
+            # Percorso del video preprocessato
+            preprocessed_video_path = video_path.parent / f"{video_path.stem}_preprocessed.mp4"
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             out = cv2.VideoWriter(str(preprocessed_video_path), fourcc, target_fps, target_size)
             
-            frames = []
+            # Calcolo il numero totale di frame attesi
+            target_total_frames = int(3 * target_fps)
             
+            
+            next_frame_time = 0  # Tempo del frame successivo da estrarre
+            frame_idx = 0
+            target_frame_idx = 0
+
             while cap.isOpened():
                 ret, frame = cap.read()
                 if not ret:
                     break
 
-                frame = cv2.resize(frame, target_size)
-                frame_tensor = torch.from_numpy(frame).float()
-                frames.append(frame_tensor.permute(2, 0, 1))  # (C, H, W)
+                current_time = frame_idx / original_fps
+                if current_time >= next_frame_time:
+                    resized_frame = cv2.resize(frame, target_size)
+                    out.write(resized_frame)
+                    target_frame_idx += 1
+                    next_frame_time += 1 / target_fps
+
+                    # Interrompo se raggiungo il numero desiderato di frame
+                    if target_frame_idx >= target_total_frames:
+                        break
+                
+                frame_idx += 1
+    
 
             cap.release()
-            
-            frames_tensor = torch.stack(frames, dim=1)  # (C, T, H, W)
-            
-            selector = SelectFrames(target_fps)
-            selected_frames = selector(frames_tensor)
-            
-            for frame in selected_frames.permute(1, 2, 3, 0):  # (T, H, W, C)
-                out.write(frame.byte().numpy())
-            
             out.release()
             return preprocessed_video_path
-
-        # Funzione per processare i dati (train, val, test)
+       
         def process_data():
             for _, row in df.iterrows():
                 video_id = row['video_id']
@@ -146,6 +102,7 @@ def load_dataset_openpose(cfg):
                     target_fps=cfg['pose_dataset']['fps']
                 )
                             # Processa il video intero con OpenPose
+                
                 keypoints_data = OpenPoseAPI(video_path=preprocessed_video_path, detect_face=cfg['openpose']['detect_face'], detect_hands=cfg['openpose']['detect_hands']).keypoints
 
                 # Crea una lista vuota per accumulare i keypoints per ogni video
