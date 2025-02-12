@@ -130,34 +130,85 @@ def load_dataset_openpose(cfg):
             return processed_data
 
 
+        def process_kth_data(cfg):
+            df = pd.read_csv(cfg['KTH_dataset']['csv_path'])
+            processed_data = []
+            
+            for _, row in df.iterrows():
+                video_name = row['video_name']
+                class_label = row['class']
+                person_id = row['person_id']
+                
+                # Percorso del video originale
+                video_path = Path(cfg['KTH_dataset']['path'], video_name).resolve()
+                
+                # Preprocessa il video (ridimensiona e riduci FPS)
+                preprocessed_video_path = preprocess_video(
+                    video_path,
+                    target_size=(cfg['KTH_dataset']['resize_w'], cfg['KTH_dataset']['resize_h']),
+                    target_fps=cfg['KTH_dataset']['fps']
+                )
+                
+                # Processa il video con OpenPose
+                keypoints_data = OpenPoseAPI(video_path=preprocessed_video_path, detect_hands=cfg['openpose']['detect_hands'], detect_face=cfg['openpose']['detect_face']).keypoints
+                
+                # Crea una lista vuota per accumulare i keypoints per ogni video
+                flat_keypoints = []
+                
+                # Salva i dati per ogni frame
+                for frame_idx, keypoints in enumerate(keypoints_data):
+                    flat_keypoints.extend(keypoints)  # Unisce i keypoints del frame al vettore piatto
+                
+                # Dopo aver processato tutto il video, salva i dati
+                processed_data.append({
+                    'video_name': video_name,
+                    'class': class_label,
+                    'person_id': person_id,
+                    'keypoints': flat_keypoints  # Salva il vettore piatto dei keypoints
+                })
+                
+                # Cancella il video preprocessato
+                if preprocessed_video_path.exists():
+                    os.remove(preprocessed_video_path)
+            
+            return processed_data
+        
+
         if(cfg.extract_keypoints and cfg.conv_backbone == "OpenPose"):
-            processed_data = process_data()        
-            # Salva i dati elaborati in un CSV
-            processed_data_path = Path(cfg['pose_dataset']['processed_csv']).resolve()
-            pd.DataFrame(processed_data).to_csv(processed_data_path, index=False)
-
-        train = PoseDatasetKeypoints(
-            root=cfg.pose_dataset.path,
-            csv_path=cfg.pose_dataset.processed_csv,
-            patient_ids=cfg.train.patient_ids,
-            camera_type=cfg.train.camera_type,
-            pose_map=cfg.pose_map
-        )
-        val = PoseDatasetKeypoints(
-            root=cfg.pose_dataset.path,
-            csv_path=cfg.pose_dataset.processed_csv,
-            patient_ids=cfg.val.patient_ids,
-            camera_type=cfg.val.camera_type,
-            pose_map=cfg.pose_map
-        )
-        test = PoseDatasetKeypoints(
-            root=cfg.pose_dataset.path,
-            csv_path=cfg.pose_dataset.processed_csv,
-            patient_ids=cfg.test.patient_ids,
-            camera_type=cfg.test.camera_type,
-            pose_map=cfg.pose_map
-        )
-
+            if(cfg.dataset == "KTH"):
+                processed_data = process_kth_data(cfg)
+                processed_data_path = Path(cfg['KTH_dataset']['processed_csv']).resolve()
+                pd.DataFrame(processed_data).to_csv(processed_data_path, index=False)
+            else:
+                processed_data = process_data()        
+                # Salva i dati elaborati in un CSV
+                processed_data_path = Path(cfg['pose_dataset']['processed_csv']).resolve()
+                pd.DataFrame(processed_data).to_csv(processed_data_path, index=False)
+        
+        if(cfg.dataset == "Custom"):
+            train = PoseDatasetKeypoints(
+                root=cfg.pose_dataset.path,
+                csv_path=cfg.pose_dataset.processed_csv,
+                patient_ids=cfg.train.patient_ids,
+                camera_type=cfg.train.camera_type,
+                pose_map=cfg.pose_map
+            )
+            val = PoseDatasetKeypoints(
+                root=cfg.pose_dataset.path,
+                csv_path=cfg.pose_dataset.processed_csv,
+                patient_ids=cfg.val.patient_ids,
+                camera_type=cfg.val.camera_type,
+                pose_map=cfg.pose_map
+            )
+            test = PoseDatasetKeypoints(
+                root=cfg.pose_dataset.path,
+                csv_path=cfg.pose_dataset.processed_csv,
+                patient_ids=cfg.test.patient_ids,
+                camera_type=cfg.test.camera_type,
+                pose_map=cfg.pose_map
+            )
+        
+            
         
         return train, val, test
 
